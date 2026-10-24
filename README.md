@@ -4,7 +4,7 @@ A one-night werewolf party game for 3–10 players that runs in the browser on p
 
 一款在瀏覽器上玩的一夜狼人殺，支援 3–10 位玩家，手機和電腦都能玩。房主建立房間，大家輸入 5 碼房間代碼加入，夜晚依序行動，天亮後討論並投票一次。
 
-**Play:** https://mkhwong.github.io/one-night-wolf/
+**Play:** https://one-night-wolf-w1e3.onrender.com · https://mkhwong.github.io/one-night-wolf/
 
 ## How to play · 玩法
 
