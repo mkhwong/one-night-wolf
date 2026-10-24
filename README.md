@@ -43,6 +43,13 @@ The game runs on the **host's device**. Other players connect to it directly ove
 - Most home and mobile networks work. Some strict company or school networks block peer-to-peer connections.
 - Opened inside Claude, the same page uses Claude's built-in room instead of PeerJS.
 
+## Hosting
+
+- **GitHub Pages:** Settings → Pages → Deploy from a branch → `main` / root. The site is `index.html` at the repository root.
+- **Render:** New + → Blueprint → this repository → Apply. `render.yaml` publishes `index.html` as a static site.
+
+The page needs nothing else: no server, no database. Rebuild `index.html` with `npm run build` after changing the source.
+
 ## Development
 
 ```bash

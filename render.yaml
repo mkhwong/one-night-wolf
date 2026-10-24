@@ -1,0 +1,17 @@
+# Render Blueprint: one static site serving the prebuilt game page.
+# On render.com: New + → Blueprint → pick this repository → Apply.
+services:
+  - type: web
+    name: one-night-wolf
+    runtime: static
+    # index.html is committed already built; only that file is published
+    buildCommand: mkdir -p public && cp index.html public/index.html
+    staticPublishPath: public
+    pullRequestPreviewsEnabled: false
+    headers:
+      - path: /*
+        name: Cache-Control
+        value: no-cache
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
