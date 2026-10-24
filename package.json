@@ -1,0 +1,25 @@
+{
+  "name": "one-night-wolf",
+  "version": "1.0.0",
+  "private": true,
+  "description": "一夜狼人殺 One Night Wolf: a one-night werewolf party game for 3–10 players in the browser.",
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "typecheck": "tsc -p .",
+    "test": "esbuild test/engine.test.ts --bundle --platform=node --format=esm --outfile=test/out.mjs --log-level=warning && node test/out.mjs",
+    "serve": "cd dist && python3 -m http.server 8765",
+    "peer-server": "node test/peerserver.cjs"
+  },
+  "devDependencies": {
+    "@types/react": "18.3.12",
+    "@types/react-dom": "18.3.1",
+    "esbuild": "0.24.2",
+    "express": "^4.21.0",
+    "peer": "1.0.2",
+    "peerjs": "1.5.4",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "typescript": "5.6.3"
+  }
+}
