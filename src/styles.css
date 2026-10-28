@@ -599,3 +599,11 @@ p { margin: 0; }
 .armory-tab.is-armed { border-color: var(--ember); background: color-mix(in srgb, var(--ember) 22%, var(--dusk-2)); }
 @media (min-width: 641px) { .armory-tab.is-armed { width: 44px; } }
 @media (prefers-reduced-motion: reduce) { .pcard-aim { box-shadow: 0 0 0 3px var(--ember); } .is-aiming .pcard.is-target { border-color: var(--ember); } }
+
+/* Alpha Wolf: the extra center Werewolf card */
+.tcard-wolf { cursor: default; }
+.tcard-wolf .cardback { color: var(--ember); background: linear-gradient(160deg, #4a1f2a, #1d0f18); border-color: color-mix(in srgb, var(--ember) 55%, transparent); }
+.tcard-wolf .tcard-label { color: var(--ember); }
+.end-center.has-wolf { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.end-wolfcard figcaption small { color: var(--ember); }
+@media (max-width: 520px) { .end-center.has-wolf { grid-template-columns: repeat(2, minmax(0, 1fr)); } }

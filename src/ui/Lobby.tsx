@@ -1,7 +1,7 @@
 import { React, useState, useEffect } from '../react';
 import { game } from '../game';
 import { roomCapability, normCode, peerAvailable } from '../net';
-import { ROLES, R, countPool, poolFromCounts, poolProblem, N_ROLES, MAX_PLAYERS, randomPool } from '../roles';
+import { ROLES, R, countPool, poolFromCounts, poolProblem, POOL_ORDER, MAX_PLAYERS, randomPool } from '../roles';
 import { useT, useView } from './store';
 import { RoleArt, Seg } from './common';
 import { sfx } from '../sound';
@@ -171,7 +171,7 @@ export function Lobby() {
             )}
           </header>
           <div className="pool-grid">
-            {Array.from({ length: N_ROLES }, (_, r) => (
+            {POOL_ORDER.map(r => (
               <div key={r} className={`pool-tile team-${ROLES[r].team} ${counts[r] ? 'is-in' : ''}`}>
                 <div className="pool-art"><RoleArt r={r} /></div>
                 <div className="pool-name"><b>{ROLES[r].zh}</b><small>{ROLES[r].en}</small></div>
@@ -183,7 +183,7 @@ export function Lobby() {
               </div>
             ))}
           </div>
-          <p className="muted small">{t('pairNote')}{host ? '' : ' · ' + t('hostOnly')}</p>
+          <p className="muted small">{t('pairNote')}{counts[R.ALPHA] ? ' · ' + t('alphaNote') : ''}{host ? '' : ' · ' + t('hostOnly')}</p>
         </div>
 
         <div className="panel">

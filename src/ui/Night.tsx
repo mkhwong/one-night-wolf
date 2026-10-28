@@ -23,6 +23,7 @@ function actionSpec(role: number, info: Info[], seerMode: 'p' | 'c'): Spec {
     case R.TROUBLEMAKER: return { kind: 'player', count: 2, self: false, skip: true, hint: 'pickTwoPlayers' };
     case R.GREMLIN: return { kind: 'player', count: 2, self: true, skip: true, hint: 'pickTwoPlayers' };
     case R.DRUNK: return { kind: 'center', count: 1, self: false, skip: false, hint: 'pickCenter' };
+    case R.ALPHA: return { kind: 'player', count: 1, self: false, skip: false, hint: 'pickAlpha' };
     default: return NONE;
   }
 }
@@ -35,17 +36,21 @@ function seatPos(i: number, n: number, me: number) {
   return { x: 50 + 41 * Math.cos(th), y: 50 + 38 * Math.sin(th) };
 }
 const CENTER_POS = [{ x: 37, y: 50 }, { x: 50, y: 50 }, { x: 63, y: 50 }];
+// with the Alpha Wolf's extra Werewolf card the middle row shifts left to make room
+const CENTER_POS_ALPHA = [{ x: 31, y: 50 }, { x: 43, y: 50 }, { x: 55, y: 50 }];
+const WOLF_POS = { x: 69, y: 50 };
 
-export function Table({ n, names, me, pickKind, picked, canPick, onPick, faces, arrows, anim, dim }: {
+export function Table({ n, names, me, pickKind, picked, canPick, onPick, faces, arrows, anim, dim, wolf = false }: {
   n: number; names: string[]; me: number; pickKind: Spec['kind']; picked: { s: number[]; c: number[] };
   canPick: (kind: 's' | 'c', i: number) => boolean; onPick: (kind: 's' | 'c', i: number) => void;
-  faces: { s: Record<number, number>; c: Record<number, number> }; arrows: number[]; anim: Anim | null; dim: boolean;
+  faces: { s: Record<number, number>; c: Record<number, number> }; arrows: number[]; anim: Anim | null; dim: boolean; wolf?: boolean;
 }) {
+  const centers = wolf ? CENTER_POS_ALPHA : CENTER_POS;
   const t = useT();
   const box = useRef<HTMLDivElement>(null);
   const posOf = (key: string) => {
     const [k, iStr] = key.split(':'); const i = Number(iStr);
-    return k === 's' ? seatPos(i, n, me) : CENTER_POS[i];
+    return k === 's' ? seatPos(i, n, me) : k === 'w' ? WOLF_POS : centers[i];
   };
   useLayoutEffect(() => {
     if (!anim || !box.current) return;
@@ -96,7 +101,7 @@ export function Table({ n, names, me, pickKind, picked, canPick, onPick, faces, 
         })}
       </svg>
       {[0, 1, 2].map(c => {
-        const p = CENTER_POS[c]; const sel = picked.c.includes(c); const ok = pickKind === 'center' && canPick('c', c);
+        const p = centers[c]; const sel = picked.c.includes(c); const ok = pickKind === 'center' && canPick('c', c);
         return (
           <button key={'c' + c} type="button" className={`tcard tcard-center ${sel ? 'is-sel' : ''} ${ok ? 'is-pickable' : ''}`} style={{ left: p.x + '%', top: p.y + '%' }}
             disabled={!ok && !sel} onClick={() => onPick('c', c)} aria-label={t('centerN', { n: c + 1 })} data-spot={'c:' + c}>
@@ -105,6 +110,12 @@ export function Table({ n, names, me, pickKind, picked, canPick, onPick, faces, 
           </button>
         );
       })}
+      {wolf && (
+        <div className="tcard tcard-center tcard-wolf" style={{ left: WOLF_POS.x + '%', top: WOLF_POS.y + '%' }} data-spot="w:0" role="img" aria-label={t('wolfCenter')}>
+          <CardBack />
+          <span className="tcard-label">{t('wolfCenter')}</span>
+        </div>
+      )}
       {Array.from({ length: n }, (_, i) => {
         const p = seatPos(i, n, me); const sel = picked.s.includes(i); const ok = pickKind === 'player' && canPick('s', i);
         return (
@@ -127,9 +138,15 @@ export function Night() {
   const role = ti >= 0 && ti < pub.tr.length ? pub.tr[ti] : -1;
   const inIntro = now < pub.ts + INTRO_MS;
   const myRole = priv?.r ?? -1;
-  const myTurn = role >= 0 && myRole === role;
+  // the Alpha Wolf wakes with the werewolves too
+  const myTurn = role >= 0 && (myRole === role || (role === R.WEREWOLF && myRole === R.ALPHA));
   const allInfo = priv?.i || [];
   const turnInfo = useMemo(() => allInfo.filter(i => i.t === role), [allInfo, role]);
+  const alphaInPlay = pub.cfg.pool.includes(R.ALPHA);
+  const knownWolves = useMemo(() => {
+    const tm = allInfo.find(i => i.k === 'team' && i.t === R.WEREWOLF);
+    return tm && tm.k === 'team' ? tm.s : [];
+  }, [allInfo.length]);
   const [seerMode, setSeerMode] = useState<'p' | 'c'>('p');
   const [picked, setPicked] = useState<{ s: number[]; c: number[] }>({ s: [], c: [] });
   const [anim, setAnim] = useState<Anim | null>(null);
@@ -151,6 +168,7 @@ export function Night() {
       else if (i.k === 'sw') { setAnim({ id, kind: 'swap', a: 's:' + i.a, b: 's:' + i.b }); sfx.swap(); }
       else if (i.k === 'ws') { setAnim({ id, kind: 'swap', a: 'c:' + i.c, b: 's:' + i.s }); sfx.swap(); }
       else if (i.k === 'dr') { setAnim({ id, kind: 'swap', a: 's:' + me, b: 'c:' + i.c }); sfx.swap(); }
+      else if (i.k === 'aw') { setAnim({ id, kind: 'swap', a: 'w:0', b: 's:' + i.s }); sfx.howl(); }
       else if (i.k === 'pp') { setAnim({ id, kind: 'look', a: 's:' + me, b: 's:' + i.s }); sfx.reveal(); }
       else if (i.k === 'pc') { setAnim({ id, kind: 'look', a: 's:' + me, b: 'c:' + i.c[0] }); sfx.reveal(); }
     }
@@ -158,7 +176,7 @@ export function Night() {
 
   const spec = myTurn && !inIntro && !v.pending ? actionSpec(role, turnInfo, seerMode) : NONE;
   const canPick = (kind: 's' | 'c', i: number) => {
-    if (kind === 's') return spec.kind === 'player' && (spec.self || i !== me);
+    if (kind === 's') return spec.kind === 'player' && (spec.self || i !== me) && !(role === R.ALPHA && knownWolves.includes(i));
     return spec.kind === 'center';
   };
   const onPick = (kind: 's' | 'c', i: number) => {
@@ -190,6 +208,7 @@ export function Night() {
       if (i.k === 'ws') { delete f.c[i.c]; delete f.s[i.s]; }
       if (i.k === 'sw') { const fa = f.s[i.a], fb = f.s[i.b]; delete f.s[i.a]; delete f.s[i.b]; if (fa !== undefined) f.s[i.b] = fa; if (fb !== undefined) f.s[i.a] = fb; }
       if (i.k === 'dr') { delete f.s[me]; delete f.c[i.c]; }
+      if (i.k === 'aw') delete f.s[i.s];
     }
     return f;
   }, [allInfo.length, me]);
@@ -227,7 +246,7 @@ export function Night() {
 
         <div className="night-grid">
           <Table n={n} names={names} me={me} pickKind={spec.kind} picked={picked} canPick={canPick} onPick={onPick}
-            faces={faces} arrows={arrows} anim={anim} dim={!myTurn && !quiet} />
+            faces={faces} arrows={arrows} anim={anim} dim={!myTurn && !quiet} wolf={alphaInPlay} />
 
           <section className="action-panel panel" aria-live="polite">
             {myTurn ? (

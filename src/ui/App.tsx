@@ -1,6 +1,6 @@
 import { React, useState, useEffect } from '../react';
 import { game } from '../game';
-import { ROLES, N_ROLES } from '../roles';
+import { ROLES, POOL_ORDER, NIGHT_ORDER, R } from '../roles';
 import { useT, useView, setLang } from './store';
 import { Modal, RoleArt, TeamBadge } from './common';
 import { Home, NameEntry, StatusScreen, Lobby } from './Lobby';
@@ -51,11 +51,11 @@ function RulesModal({ onClose }: { onClose: () => void }) {
         <p><b>{t('rulesWin')}</b></p>
         <p className="muted">{t('rulesHouse')}</p>
         <ol className="rules-roles">
-          {Array.from({ length: N_ROLES }, (_, r) => (
+          {POOL_ORDER.map(r => (
             <li key={r} className={`team-${ROLES[r].team}`}>
               <RoleArt r={r} className="rules-art" />
               <div>
-                <h3>{ROLES[r].zh} <small>{ROLES[r].en}</small> {ROLES[r].night ? <span className="tag mono">#{r + 1}</span> : <span className="tag tag-dim">{t('passive')}</span>}</h3>
+                <h3>{ROLES[r].zh} <small>{ROLES[r].en}</small> {ROLES[r].night ? <span className="tag mono">#{r === R.ALPHA ? '1+2' : NIGHT_ORDER.indexOf(r) + 1}</span> : <span className="tag tag-dim">{t('passive')}</span>}</h3>
                 <TeamBadge r={r} />
                 <p>{ROLES[r].desc[t.lang]}</p>
               </div>

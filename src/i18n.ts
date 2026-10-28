@@ -40,6 +40,9 @@ const en: Dict = {
   nightPasses: 'A quiet night. Nobody wakes.',
   pickPlayer: 'Choose a player on the table', pickCenter: 'Choose a center card', pickTwoPlayers: 'Choose two players', pickTwoCenter: 'Choose two center cards',
   pickGive: 'Now choose who gets this card (you can choose yourself)',
+  pickAlpha: 'Choose a player who isn’t a werewolf to receive the Werewolf card',
+  wolfCenter: 'Wolf card',
+  alphaNote: 'Alpha Wolf adds an extra Werewolf card to the middle',
   seerPlayer: 'One player', seerCenter: 'Two center cards',
   confirm: 'Confirm', skip: 'Do nothing', clear: 'Clear', waitingResult: 'Working…',
   learned: 'What you learned tonight', nothing: 'You learned nothing tonight.',
@@ -116,6 +119,9 @@ const zh: Dict = {
   nightPasses: '平靜的一夜，沒有人醒來。',
   pickPlayer: '選擇桌上的一位玩家', pickCenter: '選擇一張中央牌', pickTwoPlayers: '選擇兩位玩家', pickTwoCenter: '選擇兩張中央牌',
   pickGive: '選擇要把這張牌交給誰（可以是你自己）',
+  pickAlpha: '選擇一位非狼人玩家，把狼人牌交給他',
+  wolfCenter: '狼人牌',
+  alphaNote: '頭狼會在中央額外加入一張狼人牌',
   seerPlayer: '一位玩家', seerCenter: '兩張中央牌',
   confirm: '確認', skip: '不行動', clear: '清除', waitingResult: '處理中…',
   learned: '你今晚得知的資訊', nothing: '你今晚沒有得到任何資訊。',
@@ -191,6 +197,7 @@ export function describeInfo(i: Info, lang: Lang, nm: NameOf): string {
     case 'ws': return zh ? `你把${centerLabel(lang, i.c)} 交給了 ${nm(i.s)}${i.auto ? '（時間到自動執行）' : ''}` : `You gave ${centerLabel(lang, i.c)} to ${nm(i.s)}${i.auto ? ' (time ran out)' : ''}.`;
     case 'dr': return zh ? `你與${centerLabel(lang, i.c)} 交換了卡牌${i.auto ? '（時間到自動執行）' : ''}` : `You swapped with ${centerLabel(lang, i.c)}${i.auto ? ' (time ran out)' : ''}.`;
     case 'me': return zh ? `你現在的卡牌是${R(i.r)}` : `Your card is now the ${R(i.r)}.`;
+    case 'aw': return zh ? `你把狼人牌交給了 ${nm(i.s)}，他現在是狼人${i.auto ? '（時間到自動執行）' : ''}` : `You gave the Werewolf card to ${nm(i.s)}. They are a Werewolf now${i.auto ? ' (time ran out)' : ''}.`;
     case 'skip': return zh ? '你選擇不行動。' : 'You chose to do nothing.';
   }
 }
@@ -206,6 +213,7 @@ function describeClaim(i: Info, lang: Lang, nm: NameOf): string {
     case 'ws': return zh ? `我把${centerLabel(lang, i.c)} 給了 ${nm(i.s)}。` : `I gave ${centerLabel(lang, i.c)} to ${nm(i.s)}.`;
     case 'dr': return zh ? `我和${centerLabel(lang, i.c)} 換了牌。` : `I swapped with ${centerLabel(lang, i.c)}.`;
     case 'me': return zh ? `我最後看到自己是${R(i.r)}。` : `At the end I was the ${R(i.r)}.`;
+    case 'aw': return zh ? `我把狼人牌給了 ${nm(i.s)}。` : `I gave the Werewolf card to ${nm(i.s)}.`;
     default: return '';
   }
 }
@@ -239,6 +247,7 @@ export function describeLog(e: LogEntry, lang: Lang, nm: NameOf): string {
     case 'ws': return zh ? `${who} 把${centerLabel(lang, e.c)} 交給 ${nm(e.s)}` : `${whoEn} gave ${centerLabel(lang, e.c)} to ${nm(e.s)}`;
     case 'dr': return zh ? `${who} 與${centerLabel(lang, e.c)} 交換` : `${whoEn} swapped with ${centerLabel(lang, e.c)}`;
     case 'me': return zh ? `${who} 看到自己是${R(e.r)}` : `${whoEn} saw they were the ${R(e.r)}`;
+    case 'aw': return zh ? `${who} 把狼人牌交給 ${nm(e.s)}，${nm(e.s)} 變成狼人` : `${whoEn} turned ${nm(e.s)} into a Werewolf`;
     case 'skip': return zh ? `${who} 沒有行動` : `${whoEn} did nothing`;
   }
 }

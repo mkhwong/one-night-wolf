@@ -22,12 +22,14 @@ export type Info =
   | { k: 'ws'; t: number; c: number; s: number; auto?: 1 } // witch gave center c to seat s
   | { k: 'dr'; t: number; c: number; auto?: 1 }      // drunk took center c
   | { k: 'me'; t: number; r: number }                // insomniac: own card now
+  | { k: 'aw'; t: number; s: number; auto?: 1 }      // alpha wolf gave the center Werewolf card to seat s
   | { k: 'skip'; t: number };
 
 export type LogEntry = Info & { by: number };
 
 export interface Result {
   st: number[]; fn: number[]; c0: number[]; cf: number[];
+  wc0: number; wcf: number;     // the Alpha Wolf's extra center card, before / after (-1 when not in play)
   v: number[];                  // vote per seat: target seat, -1 = no werewolves, -2 = no vote
   d: number[];                  // dead seats
   hs: [number, number][];       // hunter shots [hunter seat, target]
@@ -57,6 +59,7 @@ export interface EngineState {
   gid: string; code: string; ep: number; ph: Phase; sq: number;
   seats: Seat[]; cfg: Cfg;
   start: number[]; cards: number[]; center0: number[]; center: number[];
+  wolfCard: number;               // the Alpha Wolf's extra center Werewolf card (-1 when not in play)
   turns: number[]; ti: number; ts: number; te: number;
   priv: Info[][];
   done: boolean[]; witchPeek: number;
@@ -106,7 +109,7 @@ export function newState(gid: string, code: string, host: Seat): EngineState {
   return {
     gid, code, ep: 0, ph: 'lobby', sq: 1,
     seats: [host], cfg: defaultCfg(3),
-    start: [], cards: [], center0: [], center: [],
+    start: [], cards: [], center0: [], center: [], wolfCard: -1,
     turns: [], ti: -1, ts: 0, te: 0,
     priv: [], done: [], witchPeek: -1, log: [],
     votes: [], locked: [], ready: [], hunt: null, res: null,
@@ -225,6 +228,7 @@ export class Engine {
     s.ep++;
     s.start = deck.slice(0, this.n); s.cards = s.start.slice();
     s.center0 = deck.slice(this.n, this.n + 3); s.center = s.center0.slice();
+    s.wolfCard = s.cfg.pool.includes(R.ALPHA) ? R.WEREWOLF : -1;
     s.lastStart = s.start.slice();
     s.turns = nightTurns(s.cfg.pool); s.ti = -1;
     s.priv = s.seats.map(() => []); s.done = s.seats.map(() => false); s.witchPeek = -1;
@@ -274,14 +278,23 @@ export class Engine {
   }
 
   private holders(role: number) { return this.s.start.map((r, i) => (r === role ? i : -1)).filter(i => i >= 0); }
+  /** Seats that wake in a turn: the Alpha Wolf also wakes in the Werewolf turn. */
+  private wakers(role: number) {
+    return role === R.WEREWOLF ? this.s.start.map((r, i) => (r === R.WEREWOLF || r === R.ALPHA ? i : -1)).filter(i => i >= 0) : this.holders(role);
+  }
+  /** Players the Alpha Wolf may convert: anyone but itself and the werewolves it saw. */
+  private alphaTargets(seat: number) {
+    const known = this.wakers(R.WEREWOLF);
+    return this.s.seats.map((_, i) => i).filter(i => i !== seat && !known.includes(i));
+  }
 
   private beginTurn(ti: number, now: number) {
     const s = this.s;
     s.ti = ti; s.ts = now; s.te = now + INTRO_MS + s.cfg.tn * 1000;
     s.done = s.seats.map(() => false); s.witchPeek = -1;
     const role = s.turns[ti];
-    const who = this.holders(role);
-    const wolvesStart = this.holders(R.WEREWOLF);
+    const who = this.wakers(role);
+    const wolvesStart = this.wakers(R.WEREWOLF);
     const allWolves = s.start.map((r, i) => (isWolfCard(r) ? i : -1)).filter(i => i >= 0);
     if (role === R.WEREWOLF) {
       for (const w of who) {
@@ -298,7 +311,7 @@ export class Engine {
       for (const w of who) this.give(w, { k: 'me', t: role, r: s.cards[w] });
     }
     // bots act a little after the turn opens
-    const actionRoles = [R.WEREWOLF, R.MYSTIC, R.SEER, R.APPRENTICE, R.ROBBER, R.WITCH, R.TROUBLEMAKER, R.GREMLIN, R.DRUNK];
+    const actionRoles = [R.WEREWOLF, R.ALPHA, R.MYSTIC, R.SEER, R.APPRENTICE, R.ROBBER, R.WITCH, R.TROUBLEMAKER, R.GREMLIN, R.DRUNK];
     if (actionRoles.includes(role as any)) {
       const win = Math.max(1500, s.cfg.tn * 1000 - 1500);
       for (const w of who) if (s.seats[w].bot) s.sched.push({ at: now + INTRO_MS + rint(1200, Math.min(win, 5000)), seat: w, kind: 'night' });
@@ -311,7 +324,8 @@ export class Engine {
   private endTurn(_now: number) {
     const s = this.s;
     const role = s.turns[s.ti];
-    for (const w of this.holders(role)) {
+    for (const w of this.wakers(role)) {
+      if (role === R.ALPHA && !s.done[w] && s.wolfCard >= 0) { const t = this.alphaTargets(w); if (t.length) this.alphaSwap(w, pick(t), true); }
       if (role === R.WITCH && s.witchPeek >= 0 && !s.done[w]) this.witchGive(w, w, true);
       if (role === R.DRUNK && !s.done[w]) this.drunkSwap(w, rint(0, 2), true);
     }
@@ -346,19 +360,24 @@ export class Engine {
     if (s.ph !== 'night' || ti !== s.ti || seat < 0 || seat >= this.n) return false;
     if (now < s.ts + INTRO_MS - 500) return false;
     const role = s.turns[s.ti];
-    if (s.start[seat] !== role || s.done[seat]) return false;
+    if (!this.wakers(role).includes(seat) || s.done[seat]) return false;
     const n = this.n;
     const okSeat = (v: any) => Number.isInteger(v) && v >= 0 && v < n;
     const okC = (v: any) => Number.isInteger(v) && v >= 0 && v < 3;
     if (x && x.skip) {
       if (role === R.WITCH && s.witchPeek >= 0) return false;  // must give the card away
       if (role === R.DRUNK) return false;
+      if (role === R.ALPHA && s.wolfCard >= 0 && this.alphaTargets(seat).length) return false;  // must convert someone
       s.done[seat] = true; this.give(seat, { k: 'skip', t: role }); this.bump(); return true;
     }
     switch (role) {
       case R.WEREWOLF: {
-        if (this.holders(R.WEREWOLF).length !== 1 || !okC(x?.c)) return false;
+        if (this.wakers(R.WEREWOLF).length !== 1 || !okC(x?.c)) return false;
         this.give(seat, { k: 'pc', t: role, c: [x.c], r: [s.center[x.c]] }); break;
+      }
+      case R.ALPHA: {
+        if (s.wolfCard < 0 || !okSeat(x?.s) || !this.alphaTargets(seat).includes(x.s)) return false;
+        this.alphaSwap(seat, x.s, false); this.bump(); return true;
       }
       case R.MYSTIC: case R.SEER: {
         if (role === R.SEER && Array.isArray(x?.c)) {
@@ -409,6 +428,12 @@ export class Engine {
     [s.center[c], s.cards[target]] = [s.cards[target], s.center[c]];
     this.give(seat, auto ? { k: 'ws', t: R.WITCH, c, s: target, auto: 1 } : { k: 'ws', t: R.WITCH, c, s: target });
     s.done[seat] = true; s.witchPeek = -1;
+  }
+  private alphaSwap(seat: number, target: number, auto: boolean) {
+    const s = this.s;
+    [s.wolfCard, s.cards[target]] = [s.cards[target], s.wolfCard];
+    this.give(seat, auto ? { k: 'aw', t: R.ALPHA, s: target, auto: 1 } : { k: 'aw', t: R.ALPHA, s: target });
+    s.done[seat] = true;
   }
   private drunkSwap(seat: number, c: number, auto: boolean) {
     const s = this.s;
@@ -463,7 +488,7 @@ export class Engine {
   private finish(votes: number[], dead: number[], hs: [number, number][], how: Result['how']) {
     const s = this.s;
     const { w, win, noWolf } = decideWinners(s.cards, dead);
-    s.res = { st: s.start.slice(), fn: s.cards.slice(), c0: s.center0.slice(), cf: s.center.slice(), v: votes, d: dead, hs, how, w, win, noWolf, log: s.log.slice() };
+    s.res = { st: s.start.slice(), fn: s.cards.slice(), c0: s.center0.slice(), cf: s.center.slice(), wc0: s.cfg.pool.includes(R.ALPHA) ? R.WEREWOLF : -1, wcf: s.wolfCard, v: votes, d: dead, hs, how, w, win, noWolf, log: s.log.slice() };
     s.ph = 'end'; s.sched = []; this.bump();
   }
 
@@ -489,9 +514,12 @@ export class Engine {
     const others = s.seats.map((_, i) => i).filter(i => i !== me);
     const role = s.start[me];
     if (job.kind === 'night') {
-      if (s.ph !== 'night' || s.turns[s.ti] !== role) return;
-      switch (role) {
-        case R.WEREWOLF: if (this.holders(R.WEREWOLF).length === 1) this.act(me, s.ti, { c: rint(0, 2) }, now); break;
+      if (s.ph !== 'night') return;
+      const turn = s.turns[s.ti];
+      if (!this.wakers(turn).includes(me)) return;
+      switch (turn) {
+        case R.WEREWOLF: if (this.wakers(R.WEREWOLF).length === 1) this.act(me, s.ti, { c: rint(0, 2) }, now); break;
+        case R.ALPHA: { const t = this.alphaTargets(me); if (t.length) this.act(me, s.ti, { s: pick(t) }, now); break; }
         case R.MYSTIC: { const known = this.botKnowsWolves(me); const t = others.filter(o => !known.includes(o)); this.act(me, s.ti, { s: pick(t.length ? t : others) }, now); break; }
         case R.SEER: if (Math.random() < 0.6) this.act(me, s.ti, { s: pick(others) }, now); else { const a = rint(0, 2); this.act(me, s.ti, { c: [a, (a + rint(1, 2)) % 3] }, now); } break;
         case R.APPRENTICE: this.act(me, s.ti, { c: rint(0, 2) }, now); break;
@@ -577,7 +605,7 @@ export class Engine {
   priv(seat: number): PrivState | null {
     const s = this.s;
     if (s.ph === 'lobby' || seat < 0 || seat >= s.start.length) return null;
-    const p: PrivState = { ep: s.ep, seat, r: s.start[seat], i: s.priv[seat] || [] };
+    const p: PrivState = { ep: s.ep, seat, r: s.start[seat], i: (s.priv[seat] || []).slice() };  // a copy, so the host's screen sees each change
     if (s.ph === 'vote') { p.v = s.votes[seat]; p.lk = s.locked[seat] ? 1 : 0; }
     return p;
   }

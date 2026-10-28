@@ -33,6 +33,7 @@ function useAutoMarkers(key: string) {
         case 'ws': addP('c', i.c, 'swap'); addP('s', i.s, 'swap'); if (witchCard >= 0) addR('s', i.s, witchCard); break;
         case 'dr': addR('c', i.c, R.DRUNK); addP('c', i.c, 'swap'); addP('s', me, 'swap'); break;
         case 'me': addR('s', me, i.r); addP('s', me, 'sure'); break;
+        case 'aw': addR('s', i.s, R.WEREWOLF); addP('s', i.s, 'wolf'); addP('s', i.s, 'swap'); break;
       }
     });
     setAutoApplied(key, priv.i.length);

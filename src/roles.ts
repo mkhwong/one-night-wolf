@@ -21,8 +21,13 @@ export interface RoleDef {
 export const R = {
   WEREWOLF: 0, MYSTIC: 1, MINION: 2, MASON: 3, SEER: 4, APPRENTICE: 5, ROBBER: 6,
   WITCH: 7, TROUBLEMAKER: 8, GREMLIN: 9, DRUNK: 10, INSOMNIAC: 11, HUNTER: 12,
-  TANNER: 13, VILLAGER: 14,
+  TANNER: 13, VILLAGER: 14, ALPHA: 15,
 } as const;
+
+/** Night wake-up order. The Alpha Wolf also wakes with the werewolves (in the Werewolf turn). */
+export const NIGHT_ORDER: number[] = [0, 15, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
+/** Order roles are listed in the lobby and rules: wolves first. */
+export const POOL_ORDER: number[] = [0, 15, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14];
 
 export const ROLES: RoleDef[] = [
   {
@@ -154,10 +159,21 @@ export const ROLES: RoleDef[] = [
     act: { en: '', zh: '' },
     desc: { en: 'Village team. No ability. Find the wolves by talking.', zh: '村民陣營。沒有特殊能力，靠推理找出狼人。' },
   },
+  {
+    id: 'alphawolf', zh: '頭狼', en: 'Alpha Wolf', team: 'wolf', night: true, max: 1, art: ART.alphawolf,
+    act: {
+      en: 'Alpha Wolf, wake up. Swap the center Werewolf card with the card of any player who is not a werewolf. You don\u2019t look at it.',
+      zh: '頭狼請睜眼。把中央的狼人牌與任一位非狼人玩家的卡牌交換，不能查看。',
+    },
+    desc: {
+      en: 'Werewolf team. Wakes with the werewolves, then turns a non-werewolf player into a Werewolf by swapping in the extra center Werewolf card.',
+      zh: '狼人陣營。與狼人一起睜眼，之後用中央額外的狼人牌，把一位非狼人玩家變成狼人。',
+    },
+  },
 ];
 
 export const N_ROLES = ROLES.length;
-export const isWolfCard = (r: number) => r === R.WEREWOLF || r === R.MYSTIC;
+export const isWolfCard = (r: number) => r === R.WEREWOLF || r === R.MYSTIC || r === R.ALPHA;
 export const teamOfCard = (r: number): Team => ROLES[r].team;
 export const roleName = (r: number, lang: 'en' | 'zh') => (r >= 0 && r < N_ROLES ? ROLES[r][lang] : '?');
 
@@ -167,7 +183,10 @@ export const MAX_PLAYERS = 10;
 /** Night turns for a pool: each distinct night role, in canonical order. */
 export function nightTurns(pool: number[]): number[] {
   const out: number[] = [];
-  for (let r = 0; r < N_ROLES; r++) if (ROLES[r].night && pool.includes(r)) out.push(r);
+  for (const r of NIGHT_ORDER) {
+    const inPool = pool.includes(r) || (r === R.WEREWOLF && pool.includes(R.ALPHA));
+    if (ROLES[r].night && inPool) out.push(r);
+  }
   return out;
 }
 
@@ -212,7 +231,9 @@ export function randomPool(players: number, rnd: () => number = Math.random): nu
   const need = players + 3;
   const counts = new Array(N_ROLES).fill(0);
   counts[R.WEREWOLF] = players >= 5 ? 2 : 1 + (rnd() < 0.5 ? 1 : 0);
-  if (rnd() < 0.35) { counts[R.WEREWOLF]--; counts[R.MYSTIC] = 1; if (counts[R.WEREWOLF] === 0) counts[R.WEREWOLF] = 1; }
+  const special = rnd();
+  if (special < 0.3) { counts[R.WEREWOLF]--; counts[R.MYSTIC] = 1; if (counts[R.WEREWOLF] === 0) counts[R.WEREWOLF] = 1; }
+  else if (special < 0.5) { counts[R.WEREWOLF]--; counts[R.ALPHA] = 1; if (counts[R.WEREWOLF] === 0) counts[R.WEREWOLF] = 1; }
   let total = counts.reduce((a, b) => a + b, 0);
   const candidates = [R.MINION, R.MASON, R.SEER, R.APPRENTICE, R.ROBBER, R.WITCH, R.TROUBLEMAKER, R.GREMLIN, R.DRUNK, R.INSOMNIAC, R.HUNTER, R.TANNER];
   // shuffle candidates (Fisher–Yates, bounded)

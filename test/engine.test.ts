@@ -1,5 +1,5 @@
 import { Engine, newState, tallyDeaths, decideWinners, INTRO_MS } from '../src/engine';
-import { R, ROLES, randomPool, autoBalance, poolProblem, countPool } from '../src/roles';
+import { R, ROLES, randomPool, autoBalance, poolProblem, countPool, nightTurns } from '../src/roles';
 
 let fails = 0;
 const eq = (name: string, a: any, b: any) => { const ok = JSON.stringify(a) === JSON.stringify(b); if (!ok) { fails++; console.log('FAIL', name, JSON.stringify(a), '!=', JSON.stringify(b)); } };
@@ -41,9 +41,9 @@ for (let g = 0; g < 3000; g++) {
   e.setCfg({ pool: g % 2 ? randomPool(n) : autoBalance(n), tn: 6, dd: 20, vd: 10, hr: true }, true);
   let now = 1000;
   if (!e.start(now)) { fails++; console.log('could not start', e.canStart()); break; }
-  const deck0 = [...e.s.cards, ...e.s.center].sort().join();
+  const deck0 = [...e.s.cards, ...e.s.center, e.s.wolfCard].sort().join();
   for (let step = 0; step < 4000 && e.s.ph !== 'end'; step++) { now += 250; e.tick(now); }
-  const deck1 = [...e.s.cards, ...e.s.center].sort().join();
+  const deck1 = [...e.s.cards, ...e.s.center, e.s.wolfCard].sort().join();
   if (deck0 !== deck1) { fails++; console.log('card multiset changed'); }
   if (e.s.ph !== 'end') { fails++; console.log('did not end', e.s.ph, e.s.ti); break; }
   games++; ends[e.s.res!.how] = (ends[e.s.res!.how] || 0) + 1;
@@ -80,5 +80,54 @@ console.log('games', games, ends);
   e.vote(0, 2, true); e.vote(1, 2, true); e.vote(2, -1, true); e.tick(now + 10);
   eq('end', e.s.ph, 'end'); eq('dead', e.s.res!.d, [2]);
   console.log('final cards', e.s.res!.fn.map(r => ROLES[r].en), 'win', e.s.res!.w);
+}
+// --- Alpha Wolf
+{
+  const e = new Engine(newState('g', 'ABCDE', { pid: 'h0', name: 'H', bot: false }));
+  for (const p of ['h1', 'h2', 'h3']) e.addSeat({ pid: p, name: p, bot: false });
+  e.setCfg({ pool: [R.ALPHA, R.WEREWOLF, R.MINION, R.SEER, R.VILLAGER, R.VILLAGER, R.INSOMNIAC], tn: 5 }, true);
+  eq('alpha pool ok', e.canStart(), null);
+  e.start(0);
+  e.s.start = [R.ALPHA, R.WEREWOLF, R.MINION, R.INSOMNIAC]; e.s.cards = e.s.start.slice();
+  e.s.center0 = [R.SEER, R.VILLAGER, R.VILLAGER]; e.s.center = e.s.center0.slice();
+  e.s.turns = nightTurns(e.s.cfg.pool);
+  eq('alpha turns', e.s.turns.map(r => ROLES[r].en), ['Werewolf', 'Alpha Wolf', 'Minion', 'Seer', 'Insomniac']);
+  eq('wolf center card', e.s.wolfCard, R.WEREWOLF);
+  let now = 20000; e.tick(now);
+  eq('alpha sees werewolf', e.s.priv[0][0], { k: 'team', t: R.WEREWOLF, s: [1] });
+  eq('werewolf sees alpha', e.s.priv[1][0], { k: 'team', t: R.WEREWOLF, s: [0] });
+  now += INTRO_MS + 6000; e.tick(now); eq('alpha turn', e.s.turns[e.s.ti], R.ALPHA);
+  now += INTRO_MS;
+  eq('alpha cannot skip', e.act(0, e.s.ti, { skip: 1 }, now), false);
+  eq('alpha cannot pick werewolf', e.act(0, e.s.ti, { s: 1 }, now), false);
+  eq('werewolf cannot act in alpha turn', e.act(1, e.s.ti, { s: 3 }, now), false);
+  eq('alpha converts insomniac', e.act(0, e.s.ti, { s: 3 }, now), true);
+  eq('cards after alpha', [e.s.cards, e.s.wolfCard], [[R.ALPHA, R.WEREWOLF, R.MINION, R.WEREWOLF], R.INSOMNIAC]);
+  now += 6000; e.tick(now); eq('minion sees 3 wolves', e.s.priv[2][0], { k: 'team', t: R.MINION, s: [0, 1] });
+  now += INTRO_MS + 6000; e.tick(now); eq('seer turn', e.s.turns[e.s.ti], R.SEER);
+  now += INTRO_MS + 6000; e.tick(now);
+  eq('insomniac learns she is a werewolf', e.s.priv[3].slice(-1)[0], { k: 'me', t: R.INSOMNIAC, r: R.WEREWOLF });
+  now += INTRO_MS + 6000; e.tick(now); eq('day', e.s.ph, 'day');
+  e.skipToVote(now);
+  e.vote(0, 2, true); e.vote(1, 2, true); e.vote(2, 3, true); e.vote(3, 2, true); e.tick(now + 10);
+  eq('minion dies, wolves win', e.s.res!.w, { v: 0, w: 1, t: 0 });
+  eq('converted player wins with wolves', e.s.res!.win.includes(3), true);
+  eq('result wolf card', [e.s.res!.wc0, e.s.res!.wcf], [R.WEREWOLF, R.INSOMNIAC]);
+}
+// alpha idle -> converts automatically; lone alpha may peek
+{
+  const e = new Engine(newState('g', 'ABCDE', { pid: 'h0', name: 'H', bot: false }));
+  for (const p of ['h1', 'h2']) e.addSeat({ pid: p, name: p, bot: false });
+  e.setCfg({ pool: [R.ALPHA, R.SEER, R.VILLAGER, R.VILLAGER, R.ROBBER, R.TANNER], tn: 5 }, true);
+  e.start(0);
+  e.s.start = [R.ALPHA, R.SEER, R.VILLAGER]; e.s.cards = e.s.start.slice(); e.s.center = [R.VILLAGER, R.ROBBER, R.TANNER];
+  e.s.turns = nightTurns(e.s.cfg.pool);
+  let now = 20000; e.tick(now);
+  eq('lone alpha', e.s.priv[0][0].k, 'lone');
+  eq('lone alpha peeks', e.act(0, e.s.ti, { c: 2 }, now + INTRO_MS), true);
+  now += INTRO_MS + 6000; e.tick(now); eq('alpha turn 2', e.s.turns[e.s.ti], R.ALPHA);
+  now += INTRO_MS + 6000; e.tick(now);
+  const last = e.s.priv[0].slice(-1)[0];
+  eq('auto convert', last.k === 'aw' && (last as any).auto === 1 && [1, 2].includes((last as any).s), true);
 }
 console.log(fails ? fails + ' FAILURES' : 'ALL OK');

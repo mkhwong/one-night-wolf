@@ -71,7 +71,7 @@ export function End() {
       <section className="end-lower">
         <div className="panel">
           <h2>{t('center')}</h2>
-          <div className="end-center">
+          <div className={`end-center ${res.wc0 >= 0 ? 'has-wolf' : ''}`}>
             {res.c0.map((c, i) => (
               <div key={i} className="end-cards">
                 <figure><RoleArt r={c} /><figcaption><small>{t('centerN', { n: i + 1 })}</small>{t.role(c)}</figcaption></figure>
@@ -79,6 +79,13 @@ export function End() {
                 <figure><RoleArt r={res.cf[i]} /><figcaption><small>{t('finalCard')}</small>{t.role(res.cf[i])}</figcaption></figure>
               </div>
             ))}
+            {res.wc0 >= 0 && (
+              <div className="end-cards end-wolfcard">
+                <figure><RoleArt r={res.wc0} /><figcaption><small>{t('wolfCenter')}</small>{t.role(res.wc0)}</figcaption></figure>
+                <span className="end-arrow" aria-hidden="true">→</span>
+                <figure><RoleArt r={res.wcf} /><figcaption><small>{t('finalCard')}</small>{t.role(res.wcf)}</figcaption></figure>
+              </div>
+            )}
           </div>
         </div>
         <div className="panel">

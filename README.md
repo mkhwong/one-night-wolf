@@ -26,10 +26,11 @@ A one-night werewolf party game for 3–10 players that runs in the browser on p
 
 ## Roles · 角色
 
-狼人 Werewolf · 神秘狼 Mystic Wolf · 爪牙 Minion · 共濟會 Mason · 預言家 Seer · 見習預言家 Apprentice Seer · 強盜 Robber · 女巫 Witch · 搗蛋鬼 Troublemaker · 小魔怪 Gremlin · 酒鬼 Drunk · 失眠者 Insomniac · 獵人 Hunter · 皮匠 Tanner · 村民 Villager
+狼人 Werewolf · 頭狼 Alpha Wolf · 神秘狼 Mystic Wolf · 爪牙 Minion · 共濟會 Mason · 預言家 Seer · 見習預言家 Apprentice Seer · 強盜 Robber · 女巫 Witch · 搗蛋鬼 Troublemaker · 小魔怪 Gremlin · 酒鬼 Drunk · 失眠者 Insomniac · 獵人 Hunter · 皮匠 Tanner · 村民 Villager
 
 House rules in this version:
 
+- The Alpha Wolf wakes with the werewolves, then swaps an extra center Werewolf card with a non-werewolf player, turning them into a Werewolf without anyone looking. If it doesn't choose in time, a random non-werewolf is converted.
 - The Mystic Wolf sees the werewolves, but they don't see it.
 - With no wolf among the players, the Minion wins if anyone is executed, the Minion included.
 - The Hunter may shoot during the day (optional, on by default). The game pauses for everyone, and the shot ends the game.
@@ -68,6 +69,6 @@ Browser tests use Python Playwright. Start `npm run serve` (and `npm run peer-se
 | `src/net.ts` | Transports (Claude room, PeerJS, same-browser tabs) and crypto |
 | `src/roles.ts` | Every role's names (EN / 繁中), team, night order, limits and text |
 | `src/ui/` | React screens: lobby, reveal, night table, discussion, vote, results |
-| `art/` | Role clipart sheets and transparent cutouts; `tools/cutout.py` and `tools/encode_art.py` rebuild `src/art.ts` |
+| `art/` | Role clipart sheets and transparent cutouts; `tools/cutout.py`, `tools/cutout_alpha.py` and `tools/encode_art.py` rebuild `src/art.ts` |
 
 React 18 and PeerJS load from pinned CDN builds; everything else, including the art, is inside `index.html`.
