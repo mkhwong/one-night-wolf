@@ -56,7 +56,7 @@ const en: Dict = {
   pin_peek: 'Peeked', pin_swap: 'Swapped', pin_wolf: 'Wolf', pin_safe: 'Safe', pin_doubt: 'Doubt', pin_sure: 'Confirmed', pin_tanner: 'Tanner?',
   peaceToggle: 'I think every wolf is in the center', peaceBadge: 'thinks no wolves',
   chat: 'Town chat', chatPh: 'Say something…', send: 'Send', minimize: 'Minimize',
-  armory: 'Throw something', egg: 'Egg', tomato: 'Moldy tomato', poo: 'Poo', aimHint: 'Tap a player to throw the {item}', cancel: 'Cancel', wipe: 'Wipe screen',
+  armory: 'Throw or give', egg: 'Egg', tomato: 'Moldy tomato', poo: 'Poo', flower: 'Flower bouquet', aimHint: 'Tap a player to throw the {item}', aimGive: 'Tap a player to give the bouquet', giftFrom: '{name} gives you a bouquet!', thanks: 'Thank you', cancel: 'Cancel', wipe: 'Wipe screen',
   vote: 'Vote', voteTitle: 'Point at the werewolf', votePick: 'Choose one player, or vote that no wolf is among you.',
   peace: 'No werewolves among us', peaceDesc: 'Every wolf card is in the center',
   lock: 'Lock my vote', locked: 'Vote locked', lockedCount: '{a} of {b} locked', autoLockNote: 'Your selection locks automatically when time runs out.',
@@ -135,7 +135,7 @@ const zh: Dict = {
   pin_peek: '已查看', pin_swap: '已調換', pin_wolf: '狼牌', pin_safe: '好人牌', pin_doubt: '存疑', pin_sure: '確認', pin_tanner: '皮匠？',
   peaceToggle: '我認為所有狼都在中央', peaceBadge: '認為沒有狼',
   chat: '村莊聊天', chatPh: '說點什麼…', send: '送出', minimize: '收起',
-  armory: '丟東西', egg: '雞蛋', tomato: '爛番茄', poo: '便便', aimHint: '點擊一位玩家丟出{item}', cancel: '取消', wipe: '擦乾淨',
+  armory: '丟東西／送花', egg: '雞蛋', tomato: '爛番茄', poo: '便便', flower: '花束', aimHint: '點擊一位玩家丟出{item}', aimGive: '點擊一位玩家送上花束', giftFrom: '{name} 送你一束花！', thanks: '謝謝', cancel: '取消', wipe: '擦乾淨',
   vote: '投票', voteTitle: '指出狼人', votePick: '選擇一位玩家，或投票認為沒有狼人在玩家之中。',
   peace: '沒有狼人在我們之中', peaceDesc: '所有狼牌都在中央',
   lock: '鎖定我的票', locked: '已鎖定', lockedCount: '{a} / {b} 人已鎖定', autoLockNote: '時間到時，你目前的選擇會自動鎖定。',
@@ -198,6 +198,7 @@ export function describeInfo(i: Info, lang: Lang, nm: NameOf): string {
     case 'dr': return zh ? `你與${centerLabel(lang, i.c)} 交換了卡牌${i.auto ? '（時間到自動執行）' : ''}` : `You swapped with ${centerLabel(lang, i.c)}${i.auto ? ' (time ran out)' : ''}.`;
     case 'me': return zh ? `你現在的卡牌是${R(i.r)}` : `Your card is now the ${R(i.r)}.`;
     case 'aw': return zh ? `你把狼人牌交給了 ${nm(i.s)}，他現在是狼人${i.auto ? '（時間到自動執行）' : ''}` : `You gave the Werewolf card to ${nm(i.s)}. They are a Werewolf now${i.auto ? ' (time ran out)' : ''}.`;
+    case 'cnt': return i.n === 0 ? (zh ? '玩家面前沒有任何狼牌。' : 'There are no wolf cards in front of players.') : (zh ? `玩家面前共有 ${i.n} 張狼牌。` : `There ${i.n === 1 ? 'is 1 wolf card' : `are ${i.n} wolf cards`} in front of players.`);
     case 'skip': return zh ? '你選擇不行動。' : 'You chose to do nothing.';
   }
 }
@@ -214,6 +215,7 @@ function describeClaim(i: Info, lang: Lang, nm: NameOf): string {
     case 'dr': return zh ? `我和${centerLabel(lang, i.c)} 換了牌。` : `I swapped with ${centerLabel(lang, i.c)}.`;
     case 'me': return zh ? `我最後看到自己是${R(i.r)}。` : `At the end I was the ${R(i.r)}.`;
     case 'aw': return zh ? `我把狼人牌給了 ${nm(i.s)}。` : `I gave the Werewolf card to ${nm(i.s)}.`;
+    case 'cnt': return zh ? `我數到 ${i.n} 隻狼。` : `I counted ${i.n} ${i.n === 1 ? 'wolf' : 'wolves'}.`;
     default: return '';
   }
 }
@@ -248,6 +250,7 @@ export function describeLog(e: LogEntry, lang: Lang, nm: NameOf): string {
     case 'dr': return zh ? `${who} 與${centerLabel(lang, e.c)} 交換` : `${whoEn} swapped with ${centerLabel(lang, e.c)}`;
     case 'me': return zh ? `${who} 看到自己是${R(e.r)}` : `${whoEn} saw they were the ${R(e.r)}`;
     case 'aw': return zh ? `${who} 把狼人牌交給 ${nm(e.s)}，${nm(e.s)} 變成狼人` : `${whoEn} turned ${nm(e.s)} into a Werewolf`;
+    case 'cnt': return zh ? `${who} 數到玩家面前有 ${e.n} 張狼牌` : `${whoEn} counted ${e.n} wolf card${e.n === 1 ? '' : 's'} among the players`;
     case 'skip': return zh ? `${who} 沒有行動` : `${whoEn} did nothing`;
   }
 }

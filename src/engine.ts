@@ -23,6 +23,7 @@ export type Info =
   | { k: 'dr'; t: number; c: number; auto?: 1 }      // drunk took center c
   | { k: 'me'; t: number; r: number }                // insomniac: own card now
   | { k: 'aw'; t: number; s: number; auto?: 1 }      // alpha wolf gave the center Werewolf card to seat s
+  | { k: 'cnt'; t: number; n: number }               // night raven: wolf cards in front of players at the end of the night
   | { k: 'skip'; t: number };
 
 export type LogEntry = Info & { by: number };
@@ -309,6 +310,9 @@ export class Engine {
       for (const w of who) this.give(w, { k: 'team', t: role, s: who.filter(x => x !== w) });
     } else if (role === R.INSOMNIAC) {
       for (const w of who) this.give(w, { k: 'me', t: role, r: s.cards[w] });
+    } else if (role === R.RAVEN) {
+      const n = s.cards.filter(isWolfCard).length;
+      for (const w of who) this.give(w, { k: 'cnt', t: role, n });
     }
     // bots act a little after the turn opens
     const actionRoles = [R.WEREWOLF, R.ALPHA, R.MYSTIC, R.SEER, R.APPRENTICE, R.ROBBER, R.WITCH, R.TROUBLEMAKER, R.GREMLIN, R.DRUNK];
@@ -553,7 +557,7 @@ export class Engine {
     }
     if (job.kind === 'throw') {
       if (s.ph !== 'day') return;
-      s.soc.t.push([me, s.nid++, rint(0, 2), pick(others)]);
+      s.soc.t.push([me, s.nid++, rint(0, 3), pick(others)]);   // 3 = flower bouquet
       s.soc.t = s.soc.t.slice(-4); this.bump(); return;
     }
     if (job.kind === 'vote') {
@@ -566,18 +570,20 @@ export class Engine {
         target = pick(t.length ? t : others);
       } else if (team === 'village') {
         const saw = s.priv[me].find(i => i.k === 'pp' && isWolfCard(i.r));
+        const count = s.priv[me].find(i => i.k === 'cnt');
+        if (count && count.k === 'cnt' && count.n === 0) target = -1;   // the Raven counted no wolves
         if (saw && saw.k === 'pp') target = saw.s;
-        if (target < 0) {
+        if (target === -2) {
           const liars = Object.entries(s.claims).filter(([sStr, r]) => Number(sStr) !== me && r === role && ROLES[role].max === 1).map(([sStr]) => Number(sStr));
           if (liars.length) target = pick(liars);
         }
-        if (target < 0) {
+        if (target === -2) {
           const byRole: Record<number, number[]> = {};
           Object.entries(s.claims).forEach(([sStr, r]) => { (byRole[r] ||= []).push(Number(sStr)); });
           const contested = Object.entries(byRole).filter(([r, ss]) => ss.length > ROLES[Number(r)].max).flatMap(([, ss]) => ss).filter(x => x !== me);
           if (contested.length) target = pick(contested);
         }
-        if (target < 0) target = Math.random() < 0.12 ? -1 : pick(others);
+        if (target === -2) target = Math.random() < 0.12 ? -1 : pick(others);
       } else target = pick(others);
       if (target === -2 || target === me) target = pick(others);
       this.vote(me, target, true);

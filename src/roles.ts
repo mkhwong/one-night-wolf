@@ -21,13 +21,13 @@ export interface RoleDef {
 export const R = {
   WEREWOLF: 0, MYSTIC: 1, MINION: 2, MASON: 3, SEER: 4, APPRENTICE: 5, ROBBER: 6,
   WITCH: 7, TROUBLEMAKER: 8, GREMLIN: 9, DRUNK: 10, INSOMNIAC: 11, HUNTER: 12,
-  TANNER: 13, VILLAGER: 14, ALPHA: 15,
+  TANNER: 13, VILLAGER: 14, ALPHA: 15, RAVEN: 16,
 } as const;
 
 /** Night wake-up order. The Alpha Wolf also wakes with the werewolves (in the Werewolf turn). */
-export const NIGHT_ORDER: number[] = [0, 15, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
+export const NIGHT_ORDER: number[] = [0, 15, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 16];
 /** Order roles are listed in the lobby and rules: wolves first. */
-export const POOL_ORDER: number[] = [0, 15, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14];
+export const POOL_ORDER: number[] = [0, 15, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 16, 12, 13, 14];
 
 export const ROLES: RoleDef[] = [
   {
@@ -168,6 +168,17 @@ export const ROLES: RoleDef[] = [
     desc: {
       en: 'Werewolf team. Wakes with the werewolves, then turns a non-werewolf player into a Werewolf by swapping in the extra center Werewolf card.',
       zh: '狼人陣營。與狼人一起睜眼，之後用中央額外的狼人牌，把一位非狼人玩家變成狼人。',
+    },
+  },
+  {
+    id: 'ravenwatch', zh: '守夜鴉', en: 'Night Raven', team: 'village', night: true, max: 1, art: ART.ravenwatch,
+    act: {
+      en: 'Night Raven, wake up and count the wolves among the village.',
+      zh: '守夜鴉請睜眼，數一數村裡還有幾隻狼。',
+    },
+    desc: {
+      en: 'Village team. Wakes last and learns how many wolf cards are in front of players right now (center cards don\u2019t count), but not who holds them.',
+      zh: '村民陣營。夜晚最後醒來，得知此刻玩家面前共有幾張狼牌（不包括中央牌），但不知道是誰。',
     },
   },
 ];

@@ -130,4 +130,34 @@ console.log('games', games, ends);
   const last = e.s.priv[0].slice(-1)[0];
   eq('auto convert', last.k === 'aw' && (last as any).auto === 1 && [1, 2].includes((last as any).s), true);
 }
+// --- Night Raven: counts wolf cards in front of players at the end of the night
+{
+  const e = new Engine(newState('g', 'ABCDE', { pid: 'h0', name: 'H', bot: false }));
+  for (const p of ['h1', 'h2', 'h3']) e.addSeat({ pid: p, name: p, bot: false });
+  e.setCfg({ pool: [R.ALPHA, R.WEREWOLF, R.RAVEN, R.ROBBER, R.VILLAGER, R.VILLAGER, R.SEER], tn: 5 }, true);
+  e.start(0);
+  e.s.start = [R.ALPHA, R.WEREWOLF, R.RAVEN, R.ROBBER]; e.s.cards = e.s.start.slice(); e.s.center = [R.VILLAGER, R.VILLAGER, R.SEER];
+  e.s.turns = nightTurns(e.s.cfg.pool);
+  eq('raven wakes last', e.s.turns[e.s.turns.length - 1], R.RAVEN);
+  let now = 20000; e.tick(now);                                     // werewolves
+  now += INTRO_MS + 6000; e.tick(now); now += INTRO_MS;             // alpha
+  e.act(0, e.s.ti, { s: 2 }, now);                                  // converts the Raven itself
+  now += 6000; e.tick(now); eq('seer turn (raven test)', e.s.turns[e.s.ti], R.SEER);
+  now += INTRO_MS + 6000; e.tick(now); now += INTRO_MS;             // robber
+  e.act(3, e.s.ti, { s: 1 }, now);                                  // robber steals the Werewolf
+  now += 6000; e.tick(now);                                         // raven turn
+  eq('raven turn', e.s.turns[e.s.ti], R.RAVEN);
+  eq('raven counts 3 (incl. itself, converted)', e.s.priv[2].slice(-1)[0], { k: 'cnt', t: R.RAVEN, n: 3 });
+}
+{
+  const e = new Engine(newState('g', 'ABCDE', { pid: 'h0', name: 'H', bot: false }));
+  for (const p of ['h1', 'h2']) e.addSeat({ pid: p, name: p, bot: false });
+  e.setCfg({ pool: [R.RAVEN, R.SEER, R.VILLAGER, R.WEREWOLF, R.WEREWOLF, R.TANNER], tn: 5 }, true);
+  e.start(0);
+  e.s.start = [R.RAVEN, R.SEER, R.VILLAGER]; e.s.cards = e.s.start.slice(); e.s.center = [R.WEREWOLF, R.WEREWOLF, R.TANNER];
+  e.s.turns = nightTurns(e.s.cfg.pool);
+  let now = 20000;
+  for (let k = 0; k < 6 && e.s.ph !== 'day'; k++) { e.tick(now); now += INTRO_MS + 6000; }
+  eq('raven counts 0 with wolves in the center', e.s.priv[0].find(i => i.k === 'cnt'), { k: 'cnt', t: R.RAVEN, n: 0 });
+}
 console.log(fails ? fails + ' FAILURES' : 'ALL OK');

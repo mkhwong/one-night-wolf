@@ -28,7 +28,7 @@ function actionSpec(role: number, info: Info[], seerMode: 'p' | 'c'): Spec {
   }
 }
 
-interface Anim { id: string; kind: 'swap' | 'look'; a: string; b: string }
+interface Anim { id: string; kind: 'swap' | 'look' | 'count'; a: string; b: string; n?: number }
 
 function seatPos(i: number, n: number, me: number) {
   const base = me >= 0 ? me : 0;
@@ -56,8 +56,6 @@ export function Table({ n, names, me, pickKind, picked, canPick, onPick, faces, 
     if (!anim || !box.current) return;
     const el = box.current;
     const W = el.clientWidth, H = el.clientHeight;
-    const A = posOf(anim.a), B = posOf(anim.b);
-    const ax = (A.x / 100) * W, ay = (A.y / 100) * H, bx = (B.x / 100) * W, by = (B.y / 100) * H;
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const fly = (x0: number, y0: number, x1: number, y1: number, lift: number, cls: string) => {
       const g = document.createElement('div'); g.className = 'ghost-card ' + cls;
@@ -73,6 +71,28 @@ export function Table({ n, names, me, pickKind, picked, canPick, onPick, faces, 
       const a = g.animate(frames, { duration: reduce ? 1 : 1100, easing: 'cubic-bezier(.5,0,.3,1)', fill: 'forwards' });
       a.onfinish = () => g.remove();
     };
+    if (anim.kind === 'count') {
+      // the Raven circles the table once, passing over every card, then lands in the middle with the count
+      const bird = document.createElement('img'); bird.className = 'raven-fly'; bird.src = ROLES[R.RAVEN].art; bird.alt = '';
+      el.appendChild(bird);
+      const cx = W / 2, cy = H / 2, rx = W * 0.4, ry = H * 0.37;
+      const frames: Keyframe[] = [];
+      for (let k = 0; k <= 24; k++) {
+        const u = k / 24; const th = Math.PI / 2 + u * 2 * Math.PI; const shrink = u > 0.8 ? (u - 0.8) / 0.2 : 0;
+        const x = cx + Math.cos(th) * rx * (1 - shrink), y = cy + Math.sin(th) * ry * (1 - shrink);
+        frames.push({ transform: `translate(${x}px, ${y}px) translate(-50%, -50%) scaleX(${Math.sin(th) > 0 ? -1 : 1})` });
+      }
+      const fly = bird.animate(frames, { duration: reduce ? 1 : 2200, easing: 'ease-in-out', fill: 'forwards' });
+      fly.onfinish = () => {
+        const tag = document.createElement('div'); tag.className = 'raven-count'; tag.textContent = String(anim.n ?? 0);
+        el.appendChild(tag);
+        setTimeout(() => { bird.remove(); }, 2600);
+      };
+      return;
+    }
+    const A = posOf(anim.a), B = posOf(anim.b);
+    if (!A || !B) return;
+    const ax = (A.x / 100) * W, ay = (A.y / 100) * H, bx = (B.x / 100) * W, by = (B.y / 100) * H;
     if (anim.kind === 'swap') {
       fly(ax, ay, bx, by, Math.min(W, H) * 0.18, 'ghost-a');
       fly(bx, by, ax, ay, Math.min(W, H) * 0.18, 'ghost-b');
@@ -169,6 +189,7 @@ export function Night() {
       else if (i.k === 'ws') { setAnim({ id, kind: 'swap', a: 'c:' + i.c, b: 's:' + i.s }); sfx.swap(); }
       else if (i.k === 'dr') { setAnim({ id, kind: 'swap', a: 's:' + me, b: 'c:' + i.c }); sfx.swap(); }
       else if (i.k === 'aw') { setAnim({ id, kind: 'swap', a: 'w:0', b: 's:' + i.s }); sfx.howl(); }
+      else if (i.k === 'cnt') { setAnim({ id, kind: 'count', a: '', b: '', n: i.n }); sfx.chime(); }
       else if (i.k === 'pp') { setAnim({ id, kind: 'look', a: 's:' + me, b: 's:' + i.s }); sfx.reveal(); }
       else if (i.k === 'pc') { setAnim({ id, kind: 'look', a: 's:' + me, b: 'c:' + i.c[0] }); sfx.reveal(); }
     }

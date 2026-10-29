@@ -1,4 +1,8 @@
-"""Cut the Alpha Wolf (頭狼) out of art/alpha.png (white background, label at the bottom) into art/cut_alphawolf.png.
+"""Cut a white-background role picture (label at the bottom) into a transparent PNG.
+
+Used for the Alpha Wolf (頭狼) and the Night Raven (守夜鴉):
+  python3 tools/cutout_alpha.py                                  # art/alpha.png -> art/cut_alphawolf.png
+  python3 tools/cutout_alpha.py art/raven.png art/cut_ravenwatch.png 652
 
 The light area connected to the image edge (white page plus the pale edges of the red smoke) is
 turned into transparency with a colour-to-alpha step, so the smoke fades out cleanly on the dark
@@ -10,10 +14,13 @@ import numpy as np
 from PIL import Image
 from scipy import ndimage
 
-ART_BOTTOM = 672          # the 頭狼 label starts below this row
+import sys
+SRC = sys.argv[1] if len(sys.argv) > 1 else 'art/alpha.png'
+OUT = sys.argv[2] if len(sys.argv) > 2 else 'art/cut_alphawolf.png'
+ART_BOTTOM = int(sys.argv[3]) if len(sys.argv) > 3 else 672   # the label starts below this row
 LIGHT = 150               # pixels lighter than this (every channel) can belong to the background
 
-im = Image.open('art/alpha.png').convert('RGB')
+im = Image.open(SRC).convert('RGB')
 im = im.crop((0, 0, im.width, ART_BOTTOM))
 a = np.asarray(im).astype(float)
 H, W, _ = a.shape
@@ -51,5 +58,5 @@ img = img.crop(img.getbbox())
 # match the other cutouts' scale (roughly 250px tall)
 k = 300 / img.height
 img = img.resize((round(img.width * k), round(img.height * k)), Image.LANCZOS)
-img.save('art/cut_alphawolf.png')
-print('wrote art/cut_alphawolf.png', img.size)
+img.save(OUT)
+print('wrote', OUT, img.size)

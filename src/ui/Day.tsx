@@ -10,7 +10,9 @@ export const ITEMS = [
   { k: 'egg', icon: '🥚' },
   { k: 'tomato', icon: '🍅' },
   { k: 'poo', icon: '💩' },
+  { k: 'flower', icon: '💐' },   // a gift, not a throw: the receiver sees a hand offering it
 ];
+export const isGift = (item: number) => ITEMS[item]?.k === 'flower';
 
 /** Apply night knowledge to this device's private markers once. */
 function useAutoMarkers(key: string) {
@@ -219,7 +221,7 @@ export function Day() {
           {v.isHost && <button type="button" className="btn btn-moon" id="start-vote" onClick={() => { sfx.gavel(); game.skipToVote(); }}>{t('startVote')}</button>}
         </div>
       </header>
-      <p className="sr" role="status">{armed >= 0 ? t('aimHint', { item: t(ITEMS[armed].k) }) : ''}</p>
+      <p className="sr" role="status">{armed >= 0 ? (isGift(armed) ? t('aimGive') : t('aimHint', { item: t(ITEMS[armed].k) })) : ''}</p>
       <div className="council">
         <div className="bench bench-left">{left.map(card)}</div>
         <section className="desk panel">

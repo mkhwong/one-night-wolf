@@ -2,7 +2,7 @@ import { React, useEffect, useState } from '../react';
 import { game, ClaimEvent, ThrowEvent } from '../game';
 import { useT, useView, seatName } from './store';
 import { RoleArt } from './common';
-import { ITEMS } from './Day';
+import { ITEMS, isGift } from './Day';
 import { sfx } from '../sound';
 
 export function ClaimToasts() {
@@ -36,8 +36,10 @@ function centerOf(el: Element) { const r = el.getBoundingClientRect(); return { 
 export function Throws() {
   const v = useView(); const t = useT();
   const [hit, setHit] = useState<{ id: string; item: number; from: number } | null>(null);
+  const [gift, setGift] = useState<{ id: string; from: number } | null>(null);
   useEffect(() => game.on('throw', (e: ThrowEvent) => {
     const item = ITEMS[e.item] || ITEMS[0];
+    if (isGift(e.item)) { giveFlowers(e, setGift); return; }
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const fromEl = document.querySelector(`[data-pseat="${e.from}"]`);
     const toEl = document.querySelector(`[data-pseat="${e.to}"]`);
@@ -73,6 +75,7 @@ export function Throws() {
       };
     }
   }), []);
+  if (gift) return <Bouquet from={seatName(v, gift.from)} onClose={() => setGift(null)} />;
   if (!hit) return null;
   const item = ITEMS[hit.item] || ITEMS[0];
   return (
@@ -89,6 +92,88 @@ export function Throws() {
       {item.k === 'poo' && <div className="flies" aria-hidden="true"><span>·</span><span>·</span><span>·</span></div>}
       <p className="fp-from">{item.icon} {seatName(v, hit.from)}</p>
       <button type="button" className="btn btn-moon" onClick={() => setHit(null)}>🧽 {t('wipe')}</button>
+    </div>
+  );
+}
+
+// ---- flower bouquet: a gift, not a throw
+function giveFlowers(e: ThrowEvent, setGift: (g: { id: string; from: number } | null) => void) {
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const fromEl = document.querySelector(`[data-pseat="${e.from}"]`);
+  const toEl = document.querySelector(`[data-pseat="${e.to}"]`);
+  sfx.chime();
+  if (e.to === game.get().mySeat) {
+    setGift({ id: e.id, from: e.from });
+    setTimeout(() => setGift(null), 6500);
+    return;
+  }
+  if (!fromEl || !toEl) return;
+  // everyone else sees the bouquet float gently across, then petals on the receiver's card
+  const A = centerOf(fromEl), B = centerOf(toEl);
+  const p = document.createElement('div'); p.className = 'proj proj-gift'; p.textContent = '💐';
+  document.body.appendChild(p);
+  const lift = Math.max(60, Math.abs(B.x - A.x) * 0.25);
+  const frames: Keyframe[] = [];
+  for (let k = 0; k <= 16; k++) {
+    const u = k / 16;
+    const x = A.x + (B.x - A.x) * u; const y = A.y + (B.y - A.y) * u - Math.sin(u * Math.PI) * lift;
+    frames.push({ transform: `translate(${x}px, ${y}px) translate(-50%,-50%) rotate(${Math.sin(u * Math.PI * 2) * 12}deg) scale(${1 + Math.sin(u * Math.PI) * 0.3})` });
+  }
+  const a = p.animate(frames, { duration: reduce ? 1 : 1300, easing: 'ease-in-out' });
+  a.onfinish = () => {
+    p.remove();
+    const slot = toEl.querySelector('.splat-slot');
+    if (slot) {
+      const s = document.createElement('span'); s.className = 'stain stain-flower'; s.textContent = '💐';
+      slot.appendChild(s); setTimeout(() => s.remove(), 6000);
+    }
+  };
+}
+
+const PETALS = Array.from({ length: 14 }, (_, i) => ({ left: (i * 37) % 100, delay: (i * 0.37) % 3, dur: 3.2 + (i % 5) * 0.5, hue: i % 3 }));
+
+/** First-person: a hand rises from the bottom of the screen offering a bouquet. */
+function Bouquet({ from, onClose }: { from: string; onClose: () => void }) {
+  const t = useT();
+  return (
+    <div className="gift" role="status" aria-label={t('giftFrom', { name: from })} onClick={onClose}>
+      <div className="gift-petals" aria-hidden="true">
+        {PETALS.map((pt, i) => <span key={i} className={`petal petal-${pt.hue}`} style={{ left: pt.left + '%', animationDelay: pt.delay + 's', animationDuration: pt.dur + 's' }} />)}
+      </div>
+      <p className="gift-from">{t('giftFrom', { name: from })}</p>
+      <svg className="gift-hand" viewBox="0 0 300 420" aria-hidden="true">
+        <defs>
+          <linearGradient id="gSleeve" x1="0" x2="1"><stop offset="0" stopColor="#3a4f86" /><stop offset="1" stopColor="#24345c" /></linearGradient>
+          <linearGradient id="gPaper" x1="0" x2="1"><stop offset="0" stopColor="#f7e7c6" /><stop offset=".5" stopColor="#fff6e2" /><stop offset="1" stopColor="#e9d3a8" /></linearGradient>
+          <radialGradient id="gSkin" cx=".4" cy=".35" r=".8"><stop offset="0" stopColor="#ffd9b5" /><stop offset="1" stopColor="#e9ad84" /></radialGradient>
+        </defs>
+        <g className="gift-bunch" stroke="#1b1d24" strokeWidth="3" strokeLinejoin="round">
+          {/* leaves */}
+          <path d="M96 120 Q60 96 54 60 Q92 70 112 112 Z" fill="#4f9a5a" />
+          <path d="M204 120 Q240 96 246 60 Q208 70 188 112 Z" fill="#4f9a5a" />
+          <path d="M150 98 Q138 52 150 20 Q166 54 158 98 Z" fill="#5fae66" />
+          {/* flowers */}
+          {[[110, 92, '#e2574c'], [150, 70, '#f2c65a'], [190, 92, '#d070b0'], [128, 124, '#f08c9a'], [174, 124, '#9c80e0'], [150, 108, '#e2574c']].map(([x, y, c], i) => (
+            <g key={i} transform={`translate(${x} ${y})`}>
+              {[0, 72, 144, 216, 288].map(r => <ellipse key={r} rx="11" ry="17" cy="-12" fill={c as string} transform={`rotate(${r})`} />)}
+              <circle r="8" fill="#ffe08a" />
+            </g>
+          ))}
+          {/* paper cone */}
+          <path d="M84 132 L216 132 L168 268 L132 268 Z" fill="url(#gPaper)" />
+          <path d="M84 132 Q150 156 216 132" fill="none" />
+          <path d="M120 236 Q150 226 180 236 L172 256 Q150 248 128 256 Z" fill="#e2574c" />
+        </g>
+        {/* hand gripping the cone, then the sleeve */}
+        <g stroke="#1b1d24" strokeWidth="3" strokeLinejoin="round" strokeLinecap="round">
+          <path d="M112 268 Q108 236 130 230 L176 230 Q194 236 190 268 L184 318 L118 318 Z" fill="url(#gSkin)" />
+          <path d="M126 240 Q150 234 174 240 M124 256 Q150 250 176 256 M124 272 Q150 266 178 272" fill="none" opacity=".6" />
+          <path d="M112 262 Q96 246 104 228 Q116 220 126 238" fill="url(#gSkin)" />
+          <path d="M108 316 L196 316 L204 420 L100 420 Z" fill="url(#gSleeve)" />
+          <rect x="104" y="306" width="96" height="20" rx="8" fill="#f2c65a" />
+        </g>
+      </svg>
+      <button type="button" className="btn btn-moon gift-thanks" onClick={e => { e.stopPropagation(); onClose(); }}>💐 {t('thanks')}</button>
     </div>
   );
 }
