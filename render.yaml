@@ -5,7 +5,7 @@ services:
     name: one-night-wolf
     runtime: static
     # index.html is committed already built; only that file is published
-    buildCommand: mkdir -p public && cp index.html public/index.html
+    buildCommand: mkdir -p public && cp index.html public/index.html && cp -r clips public/clips
     staticPublishPath: public
     pullRequestPreviewsEnabled: false
     headers:

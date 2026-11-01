@@ -1,6 +1,6 @@
 import { React, useState, useEffect, useRef, useMemo, useLayoutEffect } from '../react';
 import { game } from '../game';
-import { ROLES, R } from '../roles';
+import { ROLES, R, CLIPS, clipOf } from '../roles';
 import { INTRO_MS, Info } from '../engine';
 import { describeInfo } from '../i18n';
 import { useT, useView, useNow, seatName } from './store';
@@ -150,6 +150,23 @@ export function Table({ n, names, me, pickKind, picked, canPick, onPick, faces, 
   );
 }
 
+/** The role's transition clip: plays as the turn opens and loops while it lasts; falls back to the still art. */
+function RoleClip({ r, dim, onFail }: { r: number; dim: boolean; onFail: () => void }) {
+  const id = clipOf(r)!; const cfg = CLIPS[id];
+  const ref = useRef<HTMLVideoElement>(null);
+  useEffect(() => {
+    const v = ref.current; if (!v) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    v.play().catch(() => { /* autoplay refused: the poster stays */ });
+  }, []);
+  return (
+    <div className={`theater-clip team-${ROLES[r].team} ${dim ? 'is-asleep' : ''}`} style={cfg.bg ? { background: cfg.bg } : undefined}>
+      <video ref={ref} src={`clips/${id}.mp4`} poster={`clips/${id}.jpg`} muted loop playsInline autoPlay preload="auto"
+        style={cfg.fit ? { objectFit: cfg.fit } : undefined} onError={onFail} aria-label={ROLES[r].en} />
+    </div>
+  );
+}
+
 export function Night() {
   const v = useView(); const t = useT(); const now = useNow(200);
   const pub = v.pub!; const priv = v.priv;
@@ -170,6 +187,7 @@ export function Night() {
   const [seerMode, setSeerMode] = useState<'p' | 'c'>('p');
   const [picked, setPicked] = useState<{ s: number[]; c: number[] }>({ s: [], c: [] });
   const [anim, setAnim] = useState<Anim | null>(null);
+  const [clipFailed, setClipFailed] = useState<Record<number, boolean>>({});
   const seenInfo = useRef(allInfo.length);
   const names = pub.seats.map(x => x[1]);
   const nm = (s: number) => seatName(v, s);
@@ -249,9 +267,11 @@ export function Night() {
           {!quiet && <div className="theater-slash" aria-hidden="true" />}
           <div className="theater-row">
             {!quiet ? (
-              <div className={`theater-hero team-${ROLES[role].team} ${!myTurn && !inIntro ? 'is-asleep' : ''}`} key={'h' + ti + ':' + allInfo.length}>
-                <RoleArt r={role} alt={role === R.SEER && myTurn && turnInfo.length > 0} className="theater-art" />
-              </div>
+              clipOf(role) && !clipFailed[role]
+                ? <RoleClip r={role} dim={!myTurn && !inIntro} onFail={() => setClipFailed(f => ({ ...f, [role]: true }))} key={'clip' + ti} />
+                : <div className={`theater-hero team-${ROLES[role].team} ${!myTurn && !inIntro ? 'is-asleep' : ''}`} key={'h' + ti + ':' + allInfo.length}>
+                    <RoleArt r={role} alt={role === R.SEER && myTurn && turnInfo.length > 0} className="theater-art" />
+                  </div>
             ) : <div className="theater-hero"><RoleArt r={R.INSOMNIAC} className="theater-art" /></div>}
             <div className="theater-copy">
               <p className="eyebrow mono">{quiet ? t('night') : t('turnOf', { i: ti + 1, n: pub.tr.length })}</p>

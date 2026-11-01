@@ -28,6 +28,7 @@ const local = `<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><
 fs.writeFileSync('dist/test.html', local);
 fs.copyFileSync('node_modules/react/umd/react.production.min.js', 'dist/react.js');
 fs.copyFileSync('node_modules/peerjs/dist/peerjs.min.js', 'dist/peerjs.js');
+fs.cpSync('clips', 'dist/clips', { recursive: true });
 
 // ---- standalone site for GitHub Pages (React + PeerJS from pinned CDNs)
 const ICON = "data:image/svg+xml," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="7" fill="#0a1020"/><path d="M20 5a11 11 0 1 0 7 19A9 9 0 1 1 20 5z" fill="#f2d184"/></svg>');
