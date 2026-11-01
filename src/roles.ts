@@ -186,8 +186,9 @@ export const ROLES: RoleDef[] = [
 export const N_ROLES = ROLES.length;
 
 /** Roles with an animated night-transition clip in clips/<id>.mp4 (made in Higgsfield). */
-export const CLIPS: Record<string, { fit?: 'contain'; bg?: string }> = {
-  werewolf: {}, alphawolf: {}, mysticwolf: {}, minion: {}, mason: {}, seer: {},
+// `file` gives a clip a new name when it is replaced, so caches (jsDelivr keeps files up to a day) can't serve the old one
+export const CLIPS: Record<string, { fit?: 'contain'; bg?: string; file?: string }> = {
+  werewolf: { file: 'werewolf-v2' }, alphawolf: {}, mysticwolf: {}, minion: {}, mason: {}, seer: {},
   apprenticeseer: {}, robber: {}, witch: {}, gremlin: {}, drunk: {}, ravenwatch: {}, hunter: {}, tanner: {}, villager: {},
 };
 export const clipOf = (r: number) => (r >= 0 && r < ROLES.length && CLIPS[ROLES[r].id] ? ROLES[r].id : null);

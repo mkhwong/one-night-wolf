@@ -164,7 +164,7 @@ function RoleClip({ r, dim, onFail }: { r: number; dim: boolean; onFail: () => v
   }, []);
   return (
     <div className={`theater-clip team-${ROLES[r].team} ${dim ? 'is-asleep' : ''}`} style={cfg.bg ? { background: cfg.bg } : undefined}>
-      <video ref={ref} key={bi} src={`${bases[bi]}${id}.mp4`} poster={`${bases[bi]}${id}.jpg`} muted loop playsInline autoPlay preload="auto"
+      <video ref={ref} key={bi} src={`${bases[bi]}${cfg.file || id}.mp4`} poster={`${bases[bi]}${cfg.file || id}.jpg`} muted loop playsInline autoPlay preload="auto"
         style={cfg.fit ? { objectFit: cfg.fit } : undefined} onError={() => (bi + 1 < bases.length ? setBi(bi + 1) : onFail())} aria-label={ROLES[r].en} />
     </div>
   );

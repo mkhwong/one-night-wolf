@@ -639,3 +639,6 @@ p { margin: 0; }
 /* clips play at full brightness for everyone: no vignette, no "eyes closed" dimming */
 .theater-clip { z-index: 1; }
 @media (max-width: 900px) { .theater-row:has(.theater-clip) { grid-template-columns: minmax(0, 1fr); } }
+
+/* Alpha Wolf and Night Raven art is darker than the rest: lift it a little on dark tiles */
+img.role-art[alt="頭狼"], img.role-art[alt="Alpha Wolf"], img.role-art[alt="守夜鴉"], img.role-art[alt="Night Raven"] { filter: brightness(1.25) contrast(1.05) drop-shadow(0 0 6px rgba(237,240,248,.25)); }
