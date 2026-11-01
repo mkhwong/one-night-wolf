@@ -57,3 +57,9 @@ export function editMark(key: string, kind: 's' | 'c', idx: number, fn: (m: Mark
 }
 export function setAutoApplied(key: string, n: number) { loadMarks(key); marks = { ...marks, auto: n }; saveMarks(); }
 export function marksAuto(key: string) { loadMarks(key); return marks.auto; }
+
+// ---- role transition clips on/off (this device only)
+let clipsOn = (() => { try { return localStorage.getItem('onuw:clips') !== '0'; } catch { return true; } })();
+const clipSubs = new Set<() => void>();
+export function setClipsOn(on: boolean) { clipsOn = on; try { localStorage.setItem('onuw:clips', on ? '1' : '0'); } catch { /* ignore */ } clipSubs.forEach(f => f()); }
+export function useClipsOn(): boolean { return useSyncExternalStore(fn => { clipSubs.add(fn); return () => { clipSubs.delete(fn); }; }, () => clipsOn); }

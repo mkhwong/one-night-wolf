@@ -7,7 +7,7 @@ type Dict = Record<string, string>;
 
 const en: Dict = {
   appSub: 'One Night Wolf',
-  rules: 'Rules', test: 'Test Mode', testOn: 'Test Mode on', sound: 'Sound', soundOff: 'Muted',
+  rules: 'Rules', clipsOn: 'Animations on', clipsOff: 'Card images only', test: 'Test Mode', testOn: 'Test Mode on', sound: 'Sound', soundOff: 'Muted',
   tagline: 'One night. Hidden roles. One vote at dawn.',
   lead: 'Gather 3–10 friends, share a room code, and find the werewolves before the village votes.',
   create: 'Create a room', joinTitle: 'Join with a code', codePh: 'ROOM CODE', join: 'Join',
@@ -86,7 +86,7 @@ const en: Dict = {
 
 const zh: Dict = {
   appSub: 'One Night Wolf',
-  rules: '規則', test: '測試模式', testOn: '測試模式中', sound: '音效', soundOff: '靜音',
+  rules: '規則', clipsOn: '動畫：開', clipsOff: '只顯示卡圖', test: '測試模式', testOn: '測試模式中', sound: '音效', soundOff: '靜音',
   tagline: '一個夜晚，隱藏身分，黎明一票定生死。',
   lead: '找 3 到 10 位朋友，分享房間代碼，在村民投票前找出狼人。',
   create: '建立房間', joinTitle: '輸入代碼加入', codePh: '房間代碼', join: '加入',

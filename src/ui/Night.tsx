@@ -3,7 +3,7 @@ import { game } from '../game';
 import { ROLES, R, CLIPS, clipOf } from '../roles';
 import { INTRO_MS, Info } from '../engine';
 import { describeInfo } from '../i18n';
-import { useT, useView, useNow, seatName } from './store';
+import { useT, useView, useNow, seatName, useClipsOn } from './store';
 import { RoleArt, CardBack, Countdown, OrderBar, Reminder } from './common';
 import { sfx } from '../sound';
 
@@ -190,6 +190,7 @@ export function Night() {
   const [seerMode, setSeerMode] = useState<'p' | 'c'>('p');
   const [picked, setPicked] = useState<{ s: number[]; c: number[] }>({ s: [], c: [] });
   const [anim, setAnim] = useState<Anim | null>(null);
+  const clipsOn = useClipsOn();
   const [clipFailed, setClipFailed] = useState<Record<number, boolean>>({});
   const seenInfo = useRef(allInfo.length);
   const names = pub.seats.map(x => x[1]);
@@ -270,7 +271,7 @@ export function Night() {
           {!quiet && <div className="theater-slash" aria-hidden="true" />}
           <div className="theater-row">
             {!quiet ? (
-              clipOf(role) && !clipFailed[role]
+              clipsOn && clipOf(role) && !clipFailed[role]
                 ? <RoleClip r={role} dim={!myTurn && !inIntro} onFail={() => setClipFailed(f => ({ ...f, [role]: true }))} key={'clip' + ti} />
                 : <div className={`theater-hero team-${ROLES[role].team} ${!myTurn && !inIntro ? 'is-asleep' : ''}`} key={'h' + ti + ':' + allInfo.length}>
                     <RoleArt r={role} alt={role === R.SEER && myTurn && turnInfo.length > 0} className="theater-art" />

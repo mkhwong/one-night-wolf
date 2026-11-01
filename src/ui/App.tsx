@@ -1,7 +1,7 @@
 import { React, useState, useEffect } from '../react';
 import { game } from '../game';
 import { ROLES, POOL_ORDER, NIGHT_ORDER, R } from '../roles';
-import { useT, useView, setLang } from './store';
+import { useT, useView, setLang, useClipsOn, setClipsOn } from './store';
 import { Modal, RoleArt, TeamBadge } from './common';
 import { Home, NameEntry, StatusScreen, Lobby } from './Lobby';
 import { Reveal } from './Reveal';
@@ -13,6 +13,7 @@ import { ClaimToasts, Throws } from './Effects';
 import { isMuted, setMuted, unlockAudio, sfx } from '../sound';
 
 function Nav({ onRules, onTest }: { onRules: () => void; onTest: () => void }) {
+  const clipsOn = useClipsOn();
   const t = useT(); const v = useView();
   const [muted, setM] = useState(isMuted());
   const inRoom = v.status === 'in' && v.pub;
@@ -31,6 +32,7 @@ function Nav({ onRules, onTest }: { onRules: () => void; onTest: () => void }) {
             <button type="button" role="radio" aria-checked={t.lang === 'en'} className={t.lang === 'en' ? 'is-on' : ''} onClick={() => setLang('en')}>EN</button>
             <button type="button" role="radio" aria-checked={t.lang === 'zh'} className={t.lang === 'zh' ? 'is-on' : ''} onClick={() => setLang('zh')}>繁中</button>
           </div>
+          <button type="button" id="clips-btn" className="btn btn-sm btn-ghost" aria-pressed={clipsOn} aria-label={clipsOn ? t('clipsOn') : t('clipsOff')} title={clipsOn ? t('clipsOn') : t('clipsOff')} onClick={() => setClipsOn(!clipsOn)}>{clipsOn ? '🎬' : '🖼'}<span className="btn-label">{clipsOn ? t('clipsOn') : t('clipsOff')}</span></button>
           <button type="button" className="btn btn-sm btn-ghost" aria-pressed={!muted} aria-label={muted ? t('soundOff') : t('sound')} onClick={() => { const m = !muted; setMuted(m); setM(m); if (!m) { unlockAudio(); sfx.chime(); } }}>{muted ? '🔇' : '🔊'}<span className="btn-label">{muted ? t('soundOff') : t('sound')}</span></button>
           <button type="button" className="btn btn-sm btn-ghost" onClick={onRules} aria-label={t('rules')}><span className="btn-ico" aria-hidden="true">?</span><span className="btn-label">{t('rules')}</span></button>
           <button type="button" id="test-mode-btn" className={`btn btn-sm ${v.testMode ? 'btn-test-on' : 'btn-ghost'}`} onClick={onTest} aria-label={v.testMode ? t('testOn') : t('test')}>🤖<span className="btn-label">{v.testMode ? t('testOn') : t('test')}</span></button>
