@@ -187,7 +187,7 @@ export const N_ROLES = ROLES.length;
 
 /** Roles with an animated night-transition clip in clips/<id>.mp4 (made in Higgsfield). */
 export const CLIPS: Record<string, { fit?: 'contain'; bg?: string }> = {
-  werewolf: { fit: 'contain', bg: '#f6f2ec' }, alphawolf: {}, mysticwolf: {}, minion: {}, mason: {}, seer: {},
+  werewolf: {}, alphawolf: {}, mysticwolf: {}, minion: {}, mason: {}, seer: {},
   apprenticeseer: {}, robber: {}, witch: {}, gremlin: {}, drunk: {}, ravenwatch: {}, hunter: {}, tanner: {}, villager: {},
 };
 export const clipOf = (r: number) => (r >= 0 && r < ROLES.length && CLIPS[ROLES[r].id] ? ROLES[r].id : null);
