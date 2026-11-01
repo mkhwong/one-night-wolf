@@ -154,6 +154,9 @@ export function Table({ n, names, me, pickKind, picked, canPick, onPick, faces, 
 function RoleClip({ r, dim, onFail }: { r: number; dim: boolean; onFail: () => void }) {
   const id = clipOf(r)!; const cfg = CLIPS[id];
   const ref = useRef<HTMLVideoElement>(null);
+  // the site's own clips/ folder first; if the host didn't publish it, the copy in the GitHub repo via jsDelivr
+  const bases = ['clips/', 'https://cdn.jsdelivr.net/gh/mkhwong/one-night-wolf@main/clips/'];
+  const [bi, setBi] = useState(0);
   useEffect(() => {
     const v = ref.current; if (!v) return;
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
@@ -161,8 +164,8 @@ function RoleClip({ r, dim, onFail }: { r: number; dim: boolean; onFail: () => v
   }, []);
   return (
     <div className={`theater-clip team-${ROLES[r].team} ${dim ? 'is-asleep' : ''}`} style={cfg.bg ? { background: cfg.bg } : undefined}>
-      <video ref={ref} src={`clips/${id}.mp4`} poster={`clips/${id}.jpg`} muted loop playsInline autoPlay preload="auto"
-        style={cfg.fit ? { objectFit: cfg.fit } : undefined} onError={onFail} aria-label={ROLES[r].en} />
+      <video ref={ref} key={bi} src={`${bases[bi]}${id}.mp4`} poster={`${bases[bi]}${id}.jpg`} muted loop playsInline autoPlay preload="auto"
+        style={cfg.fit ? { objectFit: cfg.fit } : undefined} onError={() => (bi + 1 < bases.length ? setBi(bi + 1) : onFail())} aria-label={ROLES[r].en} />
     </div>
   );
 }
