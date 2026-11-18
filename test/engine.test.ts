@@ -160,4 +160,18 @@ console.log('games', games, ends);
   for (let k = 0; k < 6 && e.s.ph !== 'day'; k++) { e.tick(now); now += INTRO_MS + 6000; }
   eq('raven counts 0 with wolves in the center', e.s.priv[0].find(i => i.k === 'cnt'), { k: 'cnt', t: R.RAVEN, n: 0 });
 }
+// --- daytime Hunter shot: valid only if the shooter still holds the Hunter card
+for (const swapped of [false, true]) {
+  const e = new Engine(newState('g', 'ABCDE', { pid: 'h0', name: 'H', bot: false }));
+  for (const p of ['h1', 'h2', 'h3']) e.addSeat({ pid: p, name: p, bot: false });
+  e.setCfg({ pool: [R.HUNTER, R.ROBBER, R.WEREWOLF, R.MINION, R.VILLAGER, R.SEER, R.VILLAGER], tn: 5, hr: true }, true);
+  e.start(0);
+  e.s.start = [R.HUNTER, R.ROBBER, R.WEREWOLF, R.MINION];
+  e.s.cards = swapped ? [R.ROBBER, R.HUNTER, R.WEREWOLF, R.MINION] : e.s.start.slice();
+  e.s.ph = 'day'; e.s.te = 99999;
+  eq('hunter aims (' + swapped + ')', e.huntAim(0, 1000), true);
+  e.huntShoot(0, 3);
+  if (!swapped) { eq('valid shot kills', e.s.res!.d, [3]); eq('valid shot how', e.s.res!.how, 'hunt'); }
+  else { eq('misfire kills nobody', e.s.res!.d, []); eq('misfire how', e.s.res!.how, 'misfire'); eq('misfire: wolves win', e.s.res!.w, { v: 0, w: 1, t: 0 }); eq('misfire winners', e.s.res!.win, [2, 3]); }
+}
 console.log(fails ? fails + ' FAILURES' : 'ALL OK');

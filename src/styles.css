@@ -642,3 +642,4 @@ p { margin: 0; }
 
 /* Alpha Wolf and Night Raven art is darker than the rest: lift it a little on dark tiles */
 img.role-art[alt="頭狼"], img.role-art[alt="Alpha Wolf"], img.role-art[alt="守夜鴉"], img.role-art[alt="Night Raven"] { filter: brightness(1.25) contrast(1.05) drop-shadow(0 0 6px rgba(237,240,248,.25)); }
+.hunt-warn { max-width: 44ch; padding: 10px 14px; border-radius: 10px; border: 1px solid var(--ember); background: color-mix(in srgb, var(--ember) 14%, var(--dusk)); font-size: .9rem; }

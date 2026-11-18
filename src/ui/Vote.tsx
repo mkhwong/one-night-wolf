@@ -59,6 +59,7 @@ export function HuntOverlay() {
   const v = useView(); const t = useT();
   const pub = v.pub;
   const [target, setTarget] = useState(-1);
+  const [sure, setSure] = useState(false);
   if (!pub || pub.ph !== 'hunt' || !pub.hunt) return null;
   const [hs] = pub.hunt;
   const mine = hs === v.mySeat;
@@ -73,12 +74,15 @@ export function HuntOverlay() {
             <p className="hint">{t('huntPick')}</p>
             <div className="hunt-targets">
               {pub.seats.map((s, i) => i === hs ? null : (
-                <button key={i} type="button" className={`btn ${target === i ? 'is-on' : ''}`} onClick={() => setTarget(i)}><b className="mono">{i + 1}</b> {s[1]}</button>
+                <button key={i} type="button" className={`btn ${target === i ? 'is-on' : ''}`} onClick={() => { setTarget(i); setSure(false); }}><b className="mono">{i + 1}</b> {s[1]}</button>
               ))}
             </div>
+            {sure && <p className="hunt-warn">{t('huntConfirm')}</p>}
             <div className="row-gap">
-              <button type="button" id="hunt-shoot" className="btn btn-ember btn-lg" disabled={target < 0} onClick={() => { sfx.bow(); game.huntShoot(target); }}>🏹 {t('shoot')}</button>
-              <button type="button" className="btn btn-ghost" onClick={() => game.huntCancel()}>{t('cancelHunt')}</button>
+              {!sure
+                ? <button type="button" id="hunt-shoot" className="btn btn-ember btn-lg" disabled={target < 0} onClick={() => setSure(true)}>🏹 {t('shoot')}</button>
+                : <button type="button" id="hunt-confirm" className="btn btn-ember btn-lg" onClick={() => { sfx.bow(); game.huntShoot(target); }}>🏹 {t('huntSure')}</button>}
+              <button type="button" className="btn btn-ghost" onClick={() => { setSure(false); game.huntCancel(); }}>{t('cancelHunt')}</button>
             </div>
           </>
         )}

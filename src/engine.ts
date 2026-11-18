@@ -34,7 +34,7 @@ export interface Result {
   v: number[];                  // vote per seat: target seat, -1 = no werewolves, -2 = no vote
   d: number[];                  // dead seats
   hs: [number, number][];       // hunter shots [hunter seat, target]
-  how: 'vote' | 'peace' | 'none' | 'hunt';
+  how: 'vote' | 'peace' | 'none' | 'hunt' | 'misfire';
   w: { v: 0 | 1; w: 0 | 1; t: 0 | 1 };
   win: number[];
   noWolf: 0 | 1;
@@ -485,13 +485,20 @@ export class Engine {
     const s = this.s;
     if (s.ph !== 'hunt' || !s.hunt || s.hunt.seat !== seat || target === seat || target < 0 || target >= this.n) return false;
     s.hunt = null;
+    // House rule: the shot only counts if the shooter still holds the Hunter card.
+    // A swapped Hunter who fires has bluffed the village: nobody dies and the werewolf team wins.
+    if (s.cards[seat] !== R.HUNTER) { this.finish(s.seats.map(() => -2), [], [], 'misfire'); return true; }
     this.finish(s.seats.map(() => -2), [target], [[seat, target]], 'hunt');
     return true;
   }
 
   private finish(votes: number[], dead: number[], hs: [number, number][], how: Result['how']) {
     const s = this.s;
-    const { w, win, noWolf } = decideWinners(s.cards, dead);
+    let { w, win, noWolf } = decideWinners(s.cards, dead);
+    if (how === 'misfire') {
+      w = { v: 0, w: 1, t: 0 };
+      win = s.cards.map((r, i) => (ROLES[r].team === 'wolf' ? i : -1)).filter(i => i >= 0);
+    }
     s.res = { st: s.start.slice(), fn: s.cards.slice(), c0: s.center0.slice(), cf: s.center.slice(), wc0: s.cfg.pool.includes(R.ALPHA) ? R.WEREWOLF : -1, wcf: s.wolfCard, v: votes, d: dead, hs, how, w, win, noWolf, log: s.log.slice() };
     s.ph = 'end'; s.sched = []; this.bump();
   }
