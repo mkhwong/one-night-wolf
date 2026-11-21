@@ -153,9 +153,9 @@ function GateSetting({ password, on, onSaved }: { password: string; on: boolean;
   return (
     <div className="gate-set" id="gate-set">
       <div className="gate-toggle-row">
-        <button type="button" role="switch" id="gate-toggle" aria-checked={cur.on} className={`switch ${cur.on ? 'is-on' : ''}`}
+        <button type="button" role="switch" id="gate-toggle" aria-checked={cur.on} className={`tgl ${cur.on ? 'is-on' : ''}`}
           disabled={busy || (!cur.password && !cur.on)} onClick={() => apply({ on: !cur.on }, cur.on ? t('gateOffDone') : t('gateOnDone'))}>
-          <span className="switch-knob" aria-hidden="true" />
+          <span className="tgl-knob" aria-hidden="true" />
         </button>
         <b>{cur.on ? t('gateStateOn') : t('gateStateOff')}</b>
       </div>
