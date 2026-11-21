@@ -83,11 +83,12 @@ export function StatusScreen() {
     full: [t('fullTitle'), t('fullBody')],
     hostgone: [t('hostGone'), t('hostGoneBody')],
   };
-  const [title, body] = map[v.status] || ['', ''];
+  const status = v.status === 'in' ? 'connecting' : v.status;   // in a room but its state hasn't arrived yet
+  const [title, body] = map[status] || [t('connecting'), ''];
   return (
     <main className="center-screen">
       <div className="panel status-panel">
-        {v.status === 'connecting' ? <span className="spinner" aria-hidden="true" /> : <RoleArt r={v.status === 'locked' ? R.MINION : R.INSOMNIAC} className="status-art" />}
+        {status === 'connecting' ? <span className="spinner" aria-hidden="true" /> : <RoleArt r={v.status === 'locked' ? R.MINION : R.INSOMNIAC} className="status-art" />}
         <h1 className="display">{title}</h1>
         {body && <p className="muted">{body}</p>}
         <div className="row-gap">

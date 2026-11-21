@@ -121,6 +121,7 @@ export class Game {
 
   private async connect(code: string, host: boolean, saved: Saved | null): Promise<void> {
     this.set({ status: 'connecting', code, isHost: host, err: null });
+    this.lastSq = -1; this.lastHb = 0; this.hostMissingSince = 0;   // fresh room: forget the previous room's counters
     const pid = saved?.pid && /^[a-z]/.test(saved.pid) ? saved.pid : 'p' + newId(6);
     this.nonce = saved?.nonce || 0; this.hid = saved?.hid || 0;
     this.keys = await makeKeys(saved?.jwk);
@@ -176,6 +177,7 @@ export class Game {
     try { sessionStorage.removeItem(SS); } catch { /* ignore */ }
     this.seenClaim.clear(); this.seenMsg.clear(); this.seenThrow.clear();
     this.myA = []; this.myM = []; this.myTh = []; this.lastPrivSealed = ''; this.hostShared = null; this.hostHk = '';
+    this.lastSq = -1; this.lastHb = 0; this.hostMissingSince = 0;
     this.set({ status: 'home', code: '', isHost: false, pub: null, priv: null, mySeat: -1, claims: {}, peace: {}, chat: [], hostSeen: false, netKind: null, pending: false, err: null });
   }
 
