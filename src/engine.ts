@@ -80,6 +80,7 @@ export interface EngineState {
 }
 
 export interface PubState {
+  gid?: string;
   ep: number; ph: Phase; sq: number;
   seats: [string, string, 0 | 1][];
   cfg: Cfg;
@@ -606,7 +607,7 @@ export class Engine {
   pub(): PubState {
     const s = this.s;
     return {
-      ep: s.ep, ph: s.ph, sq: s.sq,
+      gid: s.gid, ep: s.ep, ph: s.ph, sq: s.sq,
       seats: s.seats.map(x => [x.pid, x.name, x.bot ? 1 : 0]),
       cfg: s.cfg, tr: s.turns, ti: s.ti, ts: s.ts, te: s.te,
       lk: s.locked.filter(Boolean).length, off: s.off,

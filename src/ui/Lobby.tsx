@@ -5,6 +5,7 @@ import { ROLES, R, countPool, poolFromCounts, poolProblem, POOL_ORDER, MAX_PLAYE
 import { useT, useView } from './store';
 import { RoleArt, Seg } from './common';
 import { sfx } from '../sound';
+import { AccountStrip } from './Account';
 
 const LINEUP = [R.WITCH, R.ROBBER, R.SEER, R.WEREWOLF, R.TROUBLEMAKER, R.HUNTER, R.DRUNK];
 
@@ -44,6 +45,7 @@ export function Home() {
           {v.err === 'connect' && <p className="err">{t('connectErr')}</p>}
         </form>
       </section>
+      <AccountStrip />
       {mode && <p className={`mode-note mode-${mode}`}>{t(mode === 'room' ? 'modeRoom' : mode === 'peer' ? 'modePeer' : 'modeLocal')}</p>}
     </main>
   );

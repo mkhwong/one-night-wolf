@@ -2,6 +2,7 @@ import { React, ReactDOM } from './react';
 import { App } from './ui/App';
 import { game } from './game';
 import { setLang, useLang } from './ui/store';
+import { initTrack, onCredential } from './track';
 
 function boot(data: any) {
   try {
@@ -14,6 +15,7 @@ function boot(data: any) {
   try { saved = localStorage.getItem('onuw:lang'); } catch { /* storage blocked */ }
   setLang(saved === 'en' ? 'en' : 'zh');
   game.resume().catch(() => { /* fresh start */ });
+  try { initTrack(); } catch { /* logging must never break the game */ }
 }
 
 const hot = (window as any).claude?.hot;
@@ -21,4 +23,4 @@ try { hot?.snapshot?.(() => ({ sess: game.snapshot() })); } catch { /* ignore */
 if (hot?.ready) hot.ready(boot); else boot(hot?.data ?? {});
 void useLang;
 declare const __TEST__: boolean;
-if (__TEST__) (window as any).__onuw = game;
+if (__TEST__) { (window as any).__onuw = game; (window as any).__signin = onCredential; }

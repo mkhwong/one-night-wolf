@@ -82,6 +82,19 @@ const en: Dict = {
   bot_hmm: 'Hmm… someone is not telling the truth.', bot_sus: 'I don’t trust {name}.', bot_trust: '{name} seems honest to me.', bot_peace: 'What if every wolf is in the center?', bot_claim: 'I’m the {role}.',
   seatsLabel: 'Player {n}',
   you_short: 'you',
+  acctGuest: 'Guest', acctTitle: 'Account', acctGuestTitle: 'Playing as a guest', acctGuestBody: 'Sign in with Google to keep your wins and losses. Guests can still play everything.',
+  acctGuestNow: 'You are playing as a guest ({n}).', acctRecord: '{w} wins · {l} losses', acctWins: 'Wins', acctLosses: 'Losses', acctRate: 'Win rate',
+  acctBotsNote: 'Games with computer players are recorded but don’t change wins and losses.', acctSignOut: 'Sign out', acctErr: 'Sign-in didn’t work. Please try again.',
+  acctNoGoogle: 'Google sign-in isn’t switched on yet.',
+  acctPrivacy: 'This site keeps a simple record in the owner’s Google Sheet: your nickname, sign-in times, device type (phone or computer) and game results; for Google accounts also your email address. Nothing else is collected.',
+  ownerTitle: 'Owner dashboard', dashUpdated: 'Updated {t} (UK time)', dashLoading: 'Loading…', dashRange: 'Range', dashDays: 'Last {n} days', dashRefresh: 'Refresh', dashSheet: 'Open sheet',
+  dashOwnerOnly: 'Only the owner can open this.', dashErr: 'Couldn’t load the records. Try again in a moment.',
+  dashLive: 'Live rooms', dashVisitorsToday: 'Players today', dashGamesToday: 'Games today', dashGamesAll: 'Games (all time)', dashAccounts: 'Google accounts',
+  dashLiveRooms: 'Live rooms', dashNoLive: 'No rooms open right now.', dashRoom: 'Room', dashHost: 'Host', dashPlayers: 'Players', dashPhase: 'Phase', dashRound: 'Round', dashOpened: 'Opened',
+  dashDaily: 'Daily usage', dashGoogle: 'Google players', dashGuests: 'Guests', dashGames: 'Games', dashChartHint: 'Bars: different players each day. Dots: games finished.',
+  dashTip: '{d}: {v} players ({g} Google, {u} guests), {n} games', dashLogins: 'Login history', dashRecentGames: 'Recent games',
+  dashWhen: 'When', dashKind: 'How', dashName: 'Nickname', dashDevice: 'Device', dashWinner: 'Winner', dashMins: 'Min', dashDetail: 'Players (start → end role)',
+  ph_lobby: 'Lobby', ph_reveal: 'Cards', ph_night: 'Night', ph_day: 'Day', ph_vote: 'Vote', ph_hunt: 'Hunter', ph_end: 'Results', ph_closed: 'Closed',
 };
 
 const zh: Dict = {
@@ -161,6 +174,19 @@ const zh: Dict = {
   bot_hmm: '嗯……有人沒說實話。', bot_sus: '我不相信 {name}。', bot_trust: '{name} 看起來很誠實。', bot_peace: '會不會所有狼都在中央？', bot_claim: '我是{role}。',
   seatsLabel: '玩家 {n}',
   you_short: '你',
+  acctGuest: '訪客', acctTitle: '帳戶', acctGuestTitle: '以訪客身份遊玩', acctGuestBody: '用 Google 登入即可保存你的勝負紀錄；訪客同樣可以使用所有功能。',
+  acctGuestNow: '你目前以訪客身份遊玩（{n}）。', acctRecord: '{w} 勝 · {l} 負', acctWins: '勝', acctLosses: '負', acctRate: '勝率',
+  acctBotsNote: '有電腦玩家的對局會被記錄，但不計入勝負。', acctSignOut: '登出', acctErr: '登入失敗，請再試一次。',
+  acctNoGoogle: 'Google 登入未開放。',
+  acctPrivacy: '本網站會在擁有者的 Google 試算表保存簡單紀錄：暱稱、登入時間、裝置類型（手機或電腦）及對局結果；Google 帳戶另會記錄電郵地址。不會收集其他資料。',
+  ownerTitle: '擁有者監察', dashUpdated: '更新於 {t}（英國時間）', dashLoading: '載入中…', dashRange: '範圍', dashDays: '最近 {n} 日', dashRefresh: '重新整理', dashSheet: '開啟試算表',
+  dashOwnerOnly: '只有擁有者可以開啟。', dashErr: '讀取紀錄失敗，請稍後再試。',
+  dashLive: '進行中房間', dashVisitorsToday: '今日玩家', dashGamesToday: '今日對局', dashGamesAll: '總對局', dashAccounts: 'Google 帳戶',
+  dashLiveRooms: '進行中房間', dashNoLive: '目前沒有開啟中的房間。', dashRoom: '房間', dashHost: '房主', dashPlayers: '玩家', dashPhase: '階段', dashRound: '局數', dashOpened: '開房',
+  dashDaily: '每日使用量', dashGoogle: 'Google 玩家', dashGuests: '訪客', dashGames: '對局', dashChartHint: '柱：每日不同玩家人數；圓點：完成對局數。',
+  dashTip: '{d}：{v} 位玩家（Google {g}、訪客 {u}），{n} 局', dashLogins: '登入紀錄', dashRecentGames: '最近對局',
+  dashWhen: '時間', dashKind: '方式', dashName: '暱稱', dashDevice: '裝置', dashWinner: '勝方', dashMins: '分鐘', dashDetail: '玩家（起始 → 最終角色）',
+  ph_lobby: '大廳', ph_reveal: '睇牌', ph_night: '夜晚', ph_day: '白天', ph_vote: '投票', ph_hunt: '獵人', ph_end: '結算', ph_closed: '已關閉',
 };
 
 export const DICTS: Record<Lang, Dict> = { en, zh };

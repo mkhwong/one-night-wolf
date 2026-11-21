@@ -10,6 +10,7 @@ import { Day } from './Day';
 import { Vote, HuntOverlay } from './Vote';
 import { End } from './End';
 import { ClaimToasts, Throws } from './Effects';
+import { AccountChip, AccountOverlays } from './Account';
 import { isMuted, setMuted, unlockAudio, sfx } from '../sound';
 
 function Nav({ onRules, onTest }: { onRules: () => void; onTest: () => void }) {
@@ -26,6 +27,7 @@ function Nav({ onRules, onTest }: { onRules: () => void; onTest: () => void }) {
           <span className="brand-sub">{t('appSub')}</span>
         </a>
         <div className="nav-tools hscroll">
+          <AccountChip />
           {inRoom && <span className="nav-room mono" title={t('roomCode')}>{v.code}</span>}
           <button type="button" className="btn btn-sm btn-ghost lang-flip" aria-label="Language" onClick={() => setLang(t.lang === 'zh' ? 'en' : 'zh')}>{t.lang === 'zh' ? 'EN' : '中'}</button>
           <div className="seg seg-sm lang-seg" role="radiogroup" aria-label="Language">
@@ -119,6 +121,7 @@ export function App() {
       <HuntOverlay />
       {rules && <RulesModal onClose={() => setRules(false)} />}
       {test && <TestModal onClose={() => setTest(false)} />}
+      <AccountOverlays />
       {v.status === 'in' && v.netKind && !v.connected && <div className="net-warn" role="status">…</div>}
     </div>
   );

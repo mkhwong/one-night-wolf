@@ -179,6 +179,14 @@ export class Game {
     this.set({ status: 'home', code: '', isHost: false, pub: null, priv: null, mySeat: -1, claims: {}, peace: {}, chat: [], hostSeen: false, netKind: null, pending: false, err: null });
   }
 
+  /** Pre-fill the name (e.g. from a Google account) without joining anything. */
+  rememberName(nameRaw: string) {
+    const name = nameRaw.replace(STRIP, '').trim().slice(0, 12);
+    if (!name || this.v.name) return;
+    lsSet('onuw:name', name);
+    this.set({ name });
+  }
+
   setName(nameRaw: string) {
     const name = nameRaw.replace(STRIP, '').trim().slice(0, 12);
     if (!name) return;
