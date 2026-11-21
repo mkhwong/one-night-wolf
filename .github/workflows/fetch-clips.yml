@@ -1,0 +1,35 @@
+# Downloads role clips listed in tools/fetch-clips.txt ("<role> <url>" per line), converts them
+# to the game's clip format (768x432 H.264, 4 s, no audio, plus a poster JPG) and commits them to clips/.
+name: fetch clips
+on:
+  push:
+    paths: ['tools/fetch-clips.txt']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
+      - name: download and convert
+        run: |
+          set -e
+          while read -r role url; do
+            [ -z "$role" ] && continue
+            case "$role" in \#*) continue;; esac
+            curl -sSfL -o "/tmp/$role.mp4" "$url"
+            ffmpeg -v error -y -i "/tmp/$role.mp4" -t 4.04 -an \
+              -vf "scale=768:432:force_original_aspect_ratio=decrease,pad=768:432:(ow-iw)/2:(oh-ih)/2:color=0x0c0e1a,fps=24,format=yuv420p" \
+              -c:v libx264 -preset veryfast -crf 28 -movflags +faststart "clips/$role.mp4"
+            ffmpeg -v error -y -ss 0.3 -i "clips/$role.mp4" -frames:v 1 -q:v 5 "clips/$role.jpg"
+            ls -la "clips/$role.mp4" "clips/$role.jpg"
+          done < tools/fetch-clips.txt
+      - name: commit
+        run: |
+          git config user.name "Matthew"
+          git config user.email "225978652+mkhwong@users.noreply.github.com"
+          git add clips
+          git diff --cached --quiet || git commit -m "Add fetched role clips"
+          git push
