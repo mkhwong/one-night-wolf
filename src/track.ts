@@ -8,7 +8,7 @@ import { ROLES } from './roles';
 export interface Account { id: string; email: string; name: string; picture?: string; wins: number; losses: number; owner?: boolean }
 interface Saved { token: string; account: Account }
 
-const LS_ACC = 'onuw:acct', LS_GUEST = 'onuw:guest', SS_VISIT = 'onuw:visited';
+const LS_ACC = 'onuw:acct', LS_GUEST = 'onuw:guest', SS_VISIT = 'onuw:visited', LS_GATE = 'onuw:gate', LS_GATE_ON = 'onuw:gateon';
 const lsGet = (k: string) => { try { return localStorage.getItem(k); } catch { return null; } };
 const lsSet = (k: string, v: string | null) => { try { if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch { /* storage blocked */ } };
 
@@ -20,8 +20,10 @@ export function trackUrl(): string {
 }
 
 // ---------------------------------------------------------------- store
-export interface AuthState { on: boolean; clientId: string; saved: Saved | null; busy: boolean; err: string }
-let st: AuthState = { on: false, clientId: '', saved: load(), busy: false, err: '' };
+/** gate: 'open' = no password needed (or already entered), 'locked' = show the password screen, 'checking' = asking the sheet. */
+export type Gate = 'open' | 'locked' | 'checking';
+export interface AuthState { on: boolean; clientId: string; saved: Saved | null; busy: boolean; err: string; gate: Gate }
+let st: AuthState = { on: false, clientId: '', saved: load(), busy: false, err: '', gate: 'open' };
 const subs = new Set<() => void>();
 function set(p: Partial<AuthState>) { st = { ...st, ...p }; subs.forEach(f => f()); }
 export function useAuth(): AuthState { return useSyncExternalStore(fn => { subs.add(fn); return () => { subs.delete(fn); }; }, () => st); }
@@ -90,6 +92,7 @@ export async function onCredential(credential: string) {
     try { sessionStorage.setItem(SS_VISIT, '1'); } catch { /* ignore */ }
     if (!game.get().name && r.account?.name) game.rememberName(r.account.name);
     set({ busy: false });
+    if (st.gate === 'locked') checkGate();
   } else set({ busy: false, err: 'login' });
 }
 
@@ -104,6 +107,34 @@ export async function refreshMe() {
   const r = await call({ a: 'me', token: s.token });
   if (r.ok) save({ token: s.token, account: { ...r.account, picture: s.account.picture } });
   else if (r.error === 'signed out') save(null);
+}
+
+// ---------------------------------------------------------------- entry password
+export async function checkGate() {
+  const r = await call({ a: 'config', token: st.saved?.token, gate: lsGet(LS_GATE) || '' });
+  if (r.ok) {
+    lsSet(LS_GATE_ON, r.gate ? '1' : '0');
+    set({ clientId: r.clientId || '', gate: r.gateOk === false ? 'locked' : 'open' });
+  } else {
+    // the sheet can't be reached: fall back to what we knew last time
+    set({ gate: lsGet(LS_GATE_ON) === '1' && !lsGet(LS_GATE) ? 'locked' : 'open' });
+  }
+}
+
+/** Returns true when the password was right. */
+export async function unlockGate(password: string): Promise<boolean> {
+  const r = await call({ a: 'unlock', password });
+  if (!r.ok) return false;
+  lsSet(LS_GATE, r.gate || null);
+  set({ gate: 'open' });
+  return true;
+}
+
+/** Owner: set ('' turns the password off). */
+export async function setGatePassword(password: string): Promise<boolean> {
+  if (!st.saved) return false;
+  const r = await call({ a: 'setgate', token: st.saved.token, password });
+  return !!r.ok;
 }
 
 export async function fetchDashboard(days = 30): Promise<any> {
@@ -170,8 +201,8 @@ function watch() {
 
 export function initTrack() {
   if (!trackUrl()) return;
-  set({ on: true });
-  call({ a: 'config' }).then(r => { if (r.ok) set({ clientId: r.clientId || '' }); });
+  set({ on: true, gate: 'checking' });
+  checkGate();
   // one visit per browser tab session (the sheet also ignores repeats within 30 minutes)
   let first = true;
   try { first = !sessionStorage.getItem(SS_VISIT); sessionStorage.setItem(SS_VISIT, '1'); } catch { /* ignore */ }
@@ -180,6 +211,9 @@ export function initTrack() {
   else refreshMe();
   lastName = game.get().name;
   game.subscribe(watch);
+  // coming back to the front page re-checks the password (it may have been changed)
+  let wasHome = true;
+  game.subscribe(() => { const home = game.get().status === 'home'; if (home && !wasHome) checkGate(); wasHome = home; });
   setInterval(() => { const v = game.get(); if (v.isHost && v.status === 'in' && v.pub && Date.now() - roomAt > 60000) roomBeat(v); }, 15000);
   window.addEventListener('pagehide', () => { const v = game.get(); if (v.isHost && roomCode) roomBeat(v, true); });
 }

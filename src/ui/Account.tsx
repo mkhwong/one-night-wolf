@@ -1,5 +1,5 @@
 import { React, useState, useEffect, useRef } from '../react';
-import { useAuth, renderGoogleButton, signOut, fetchDashboard, refreshMe } from '../track';
+import { useAuth, renderGoogleButton, signOut, fetchDashboard, refreshMe, unlockGate, setGatePassword } from '../track';
 import { useT, useView } from './store';
 import { Modal } from './common';
 
@@ -103,6 +103,63 @@ export function AccountModal() {
   );
 }
 
+// ---------------------------------------------------------------- entry password screen
+export function GateScreen() {
+  const t = useT(); const a = useAuth();
+  const [pw, setPw] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [wrong, setWrong] = useState(false);
+  if (a.gate === 'checking') {
+    return <main className="center-screen"><div className="panel status-panel"><span className="spinner" aria-hidden="true" /><p className="muted">{t('gateChecking')}</p></div></main>;
+  }
+  const submit = async () => {
+    if (!pw.trim() || busy) return;
+    setBusy(true); setWrong(false);
+    const ok = await unlockGate(pw.trim());
+    setBusy(false);
+    if (!ok) { setWrong(true); setPw(''); }
+  };
+  return (
+    <main className="center-screen">
+      <form className="panel name-panel gate-panel" id="gate" onSubmit={e => { e.preventDefault(); submit(); }}>
+        <h1 className="display">一夜狼人殺</h1>
+        <p className="muted">{t('gateBody')}</p>
+        <input id="gate-pw" className="text-input" type="password" value={pw} onChange={e => setPw(e.target.value)} placeholder={t('gatePh')} autoFocus autoComplete="current-password" maxLength={40} />
+        {wrong && <p className="err" id="gate-wrong">{t('gateWrong')}</p>}
+        <button type="submit" className="btn btn-moon btn-lg" disabled={!pw.trim() || busy}>{busy ? '…' : t('gateEnter')}</button>
+        <details className="gate-owner">
+          <summary className="muted small">{t('gateOwner')}</summary>
+          <GoogleButton />
+        </details>
+      </form>
+    </main>
+  );
+}
+
+function GateSetting({ current, onSaved }: { current: string; onSaved: () => void }) {
+  const t = useT();
+  const [pw, setPw] = useState(current);
+  const [msg, setMsg] = useState('');
+  useEffect(() => { setPw(current); }, [current]);
+  const save = async (value: string) => {
+    setMsg('…');
+    const ok = await setGatePassword(value);
+    setMsg(ok ? (value ? t('gateSaved') : t('gateOffDone')) : t('dashErr'));
+    if (ok) onSaved();
+  };
+  return (
+    <div className="gate-set" id="gate-set">
+      <p className="small muted">{current ? t('gateIsOn') : t('gateIsOff')}</p>
+      <div className="row-gap">
+        <input id="gate-new" className="text-input" value={pw} onChange={e => setPw(e.target.value)} placeholder={t('gateNewPh')} maxLength={40} autoComplete="off" />
+        <button type="button" className="btn btn-sm btn-moon" id="gate-save" disabled={!pw.trim() || pw.trim() === current} onClick={() => save(pw.trim())}>{t('gateSave')}</button>
+        {current && <button type="button" className="btn btn-sm btn-ghost" id="gate-off" onClick={() => { setPw(''); save(''); }}>{t('gateTurnOff')}</button>}
+      </div>
+      {msg && <p className="small muted">{msg}</p>}
+    </div>
+  );
+}
+
 // ---------------------------------------------------------------- owner dashboard
 interface Day { day: string; visitors: number; google: number; guests: number; logins: number; games: number }
 
@@ -186,6 +243,9 @@ export function OwnerDashboard() {
               <div className="stat"><b className="mono">{data.totals.games}</b><span>{t('dashGamesAll')}</span></div>
               <div className="stat"><b className="mono">{data.totals.accounts}</b><span>{t('dashAccounts')}</span></div>
             </div>
+
+            <h3>{t('gateTitle')}</h3>
+            <GateSetting current={data.gatePassword || ''} onSaved={() => load()} />
 
             <h3>{t('dashLiveRooms')}</h3>
             {data.live.length ? (

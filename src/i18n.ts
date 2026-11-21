@@ -94,6 +94,9 @@ const en: Dict = {
   dashDaily: 'Daily usage', dashGoogle: 'Google players', dashGuests: 'Guests', dashGames: 'Games', dashChartHint: 'Bars: different players each day. Dots: games finished.',
   dashTip: '{d}: {v} players ({g} Google, {u} guests), {n} games', dashLogins: 'Login history', dashRecentGames: 'Recent games',
   dashWhen: 'When', dashKind: 'How', dashName: 'Nickname', dashDevice: 'Device', dashWinner: 'Winner', dashMins: 'Min', dashDetail: 'Players (start → end role)',
+  gateChecking: 'Checking…', gateBody: 'This game needs a password. Ask the owner for it.', gatePh: 'Password', gateWrong: 'That password isn’t right.', gateEnter: 'Enter',
+  gateOwner: 'Owner? Sign in with Google', gateTitle: 'Entry password', gateIsOn: 'Everyone (guests and Google players) must enter this password before they can play. You don’t need it while signed in.',
+  gateIsOff: 'No password: anyone with the link can play.', gateNewPh: 'New password', gateSave: 'Save password', gateTurnOff: 'Turn off', gateSaved: 'Saved. Everyone must enter the new password.', gateOffDone: 'Password turned off.',
   ph_lobby: 'Lobby', ph_reveal: 'Cards', ph_night: 'Night', ph_day: 'Day', ph_vote: 'Vote', ph_hunt: 'Hunter', ph_end: 'Results', ph_closed: 'Closed',
 };
 
@@ -186,6 +189,9 @@ const zh: Dict = {
   dashDaily: '每日使用量', dashGoogle: 'Google 玩家', dashGuests: '訪客', dashGames: '對局', dashChartHint: '柱：每日不同玩家人數；圓點：完成對局數。',
   dashTip: '{d}：{v} 位玩家（Google {g}、訪客 {u}），{n} 局', dashLogins: '登入紀錄', dashRecentGames: '最近對局',
   dashWhen: '時間', dashKind: '方式', dashName: '暱稱', dashDevice: '裝置', dashWinner: '勝方', dashMins: '分鐘', dashDetail: '玩家（起始 → 最終角色）',
+  gateChecking: '檢查中…', gateBody: '此遊戲需要密碼，請向擁有者索取。', gatePh: '密碼', gateWrong: '密碼不正確。', gateEnter: '進入',
+  gateOwner: '擁有者？用 Google 登入', gateTitle: '進入密碼', gateIsOn: '所有人（訪客及 Google 玩家）必須輸入此密碼才可以遊玩。你登入後無需輸入。',
+  gateIsOff: '未設密碼：任何有連結的人都可以遊玩。', gateNewPh: '新密碼', gateSave: '儲存密碼', gateTurnOff: '關閉', gateSaved: '已儲存。所有人需要輸入新密碼。', gateOffDone: '已關閉密碼。',
   ph_lobby: '大廳', ph_reveal: '睇牌', ph_night: '夜晚', ph_day: '白天', ph_vote: '投票', ph_hunt: '獵人', ph_end: '結算', ph_closed: '已關閉',
 };
 

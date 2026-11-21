@@ -5,11 +5,18 @@ import { ROLES, R, countPool, poolFromCounts, poolProblem, POOL_ORDER, MAX_PLAYE
 import { useT, useView } from './store';
 import { RoleArt, Seg } from './common';
 import { sfx } from '../sound';
-import { AccountStrip } from './Account';
+import { AccountStrip, GateScreen } from './Account';
+import { useAuth } from '../track';
 
 const LINEUP = [R.WITCH, R.ROBBER, R.SEER, R.WEREWOLF, R.TROUBLEMAKER, R.HUNTER, R.DRUNK];
 
 export function Home() {
+  const a = useAuth();
+  if (a.on && a.gate !== 'open') return <GateScreen />;
+  return <HomeOpen />;
+}
+
+function HomeOpen() {
   const t = useT(); const v = useView();
   const [code, setCode] = useState('');
   const [mode, setMode] = useState<'room' | 'peer' | 'local' | null>(null);

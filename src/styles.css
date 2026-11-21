@@ -684,3 +684,8 @@ img.role-art[alt="頭狼"], img.role-art[alt="Alpha Wolf"], img.role-art[alt="�
 .sw { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
 .sw-g { background: var(--moon); } .sw-u { background: var(--violet); opacity: .75; } .sw-games { background: var(--moss); border-radius: 50%; }
 .spinner-sm { width: 18px; height: 18px; }
+.gate-panel { text-align: left; }
+.gate-owner summary { cursor: pointer; }
+.gate-owner .gsi-btn { margin-top: 8px; }
+.gate-set { display: flex; flex-direction: column; gap: 8px; }
+.gate-set .text-input { flex: 1 1 180px; min-width: 0; }

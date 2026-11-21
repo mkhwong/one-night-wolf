@@ -59,7 +59,9 @@ function setup() {
 function handle_(p) {
   try {
     switch (p.a) {
-      case 'config': return { ok: true, clientId: CLIENT_ID.indexOf('PASTE_') === 0 ? '' : CLIENT_ID };
+      case 'config': return config_(p);
+      case 'unlock': return unlock_(p);
+      case 'setgate': return setGate_(p);
       case 'login': return login_(p);
       case 'visit': return visit_(p);
       case 'me': return me_(p);
@@ -74,6 +76,39 @@ function handle_(p) {
     console.error(err);
     return { ok: false, error: String(err && err.message || err) };
   }
+}
+
+// ------------------------------------------------------------------ entry password (訪問密碼)
+// Empty = no password. Set from the owner dashboard. Changing it signs everyone out of the gate.
+function gatePassword_() { return PropertiesService.getScriptProperties().getProperty('GATE_PASSWORD') || ''; }
+function gateVer_(pw) { return b64_(Utilities.computeHmacSha256Signature('gate:' + pw, secret_())).slice(0, 16); }
+function gateOk_(p) {
+  const pw = gatePassword_();
+  if (!pw) return true;
+  const s = verify_(p.token);
+  if (s && isOwner_(s.email)) return true;           // the owner never needs the password
+  const g = verify_(p.gate);
+  return !!(g && g.gv === gateVer_(pw));
+}
+
+function config_(p) {
+  return { ok: true, clientId: CLIENT_ID.indexOf('PASTE_') === 0 ? '' : CLIENT_ID, gate: !!gatePassword_(), gateOk: gateOk_(p) };
+}
+
+function unlock_(p) {
+  const pw = gatePassword_();
+  if (!pw) return { ok: true, gate: '' };
+  if (String(p.password || '') !== pw) { Utilities.sleep(1200); return { ok: false, error: 'wrong' }; }
+  return { ok: true, gate: sign_({ gv: gateVer_(pw), exp: Date.now() + 365 * 864e5 }) };
+}
+
+function setGate_(p) {
+  const s = verify_(p.token);
+  if (!s || !isOwner_(s.email)) return { ok: false, error: 'owner only' };
+  const pw = String(p.password || '').trim().slice(0, 40);
+  const props = PropertiesService.getScriptProperties();
+  if (pw) props.setProperty('GATE_PASSWORD', pw); else props.deleteProperty('GATE_PASSWORD');
+  return { ok: true, gate: !!pw };
 }
 
 // ------------------------------------------------------------------ accounts
@@ -277,6 +312,7 @@ function dashboard_(p) {
     totals: { games: totalGames, gamesWithBots: totalWithBots, accounts: accts.length, visitorsToday: today.visitors, gamesToday: today.games, live: live.length },
     live, daily: series, logins, games: recentGames,
     sheet: SpreadsheetApp.getActiveSpreadsheet().getUrl(),
+    gatePassword: gatePassword_(),
   };
 }
 

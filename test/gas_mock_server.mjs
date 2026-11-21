@@ -30,7 +30,7 @@ const props = {}; const cache = new Map();
 const b64ws = b => Buffer.from(b).toString('base64').replace(/\+/g, '-').replace(/\//g, '_');
 const ctx = {
   SpreadsheetApp: { getActiveSpreadsheet: () => ss },
-  PropertiesService: { getScriptProperties: () => ({ getProperty: k => props[k] || null, setProperty: (k, v) => { props[k] = v; } }) },
+  PropertiesService: { getScriptProperties: () => ({ getProperty: k => props[k] || null, setProperty: (k, v) => { props[k] = v; }, deleteProperty: k => { delete props[k]; } }) },
   CacheService: { getScriptCache: () => ({ get: k => { const e = cache.get(k); return e && e.exp > Date.now() ? e.v : null; }, put: (k, v, s) => cache.set(k, { v, exp: Date.now() + s * 1000 }) }) },
   LockService: { getScriptLock: () => ({ waitLock() {}, releaseLock() {} }) },
   Session: { getEffectiveUser: () => ({ getEmail: () => 'owner@example.com' }) },
@@ -41,7 +41,7 @@ const ctx = {
     base64EncodeWebSafe: x => b64ws(typeof x === 'string' ? Buffer.from(x, 'utf8') : Buffer.from(x.map(b => b & 255))),
     base64DecodeWebSafe: s => [...Buffer.from(s.replace(/-/g, '+').replace(/_/g, '/'), 'base64')],
     computeHmacSha256Signature: (v, k) => [...crypto.createHmac('sha256', k).update(v).digest()].map(b => (b > 127 ? b - 256 : b)),
-    getUuid: () => crypto.randomUUID(),
+    getUuid: () => crypto.randomUUID(), sleep: () => {},
     newBlob: bytes => ({ getDataAsString: () => Buffer.from(bytes.map(b => b & 255)).toString('utf8') }),
   },
   UrlFetchApp: { fetch: url => { const tok = decodeURIComponent(url.split('id_token=')[1]);
