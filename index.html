@@ -499,7 +499,7 @@ p { margin: 0; }
 .modal-back { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; padding: 16px; background: var(--shade); animation: fadeIn .2s ease; }
 .modal { width: min(480px, 100%); max-height: calc(100vh - 32px); overflow-y: auto; border-radius: 16px; border: 1px solid var(--rim); background: var(--dusk); box-shadow: 0 24px 60px rgba(0,0,0,.55); }
 .modal-wide { width: min(760px, 100%); }
-.modal-head { position: sticky; top: 0; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 16px; border-bottom: 1px solid var(--rim); background: var(--dusk); }
+.modal-head { position: sticky; top: 0; z-index: 3; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 16px; border-bottom: 1px solid var(--rim); background: var(--dusk); }
 .modal-head h2 { font-family: var(--display); font-size: 1.3rem; font-weight: 700; }
 .modal-body { padding: 16px; display: flex; flex-direction: column; gap: 12px; }
 .rules { display: flex; flex-direction: column; gap: 12px; }
