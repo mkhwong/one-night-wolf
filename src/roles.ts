@@ -189,7 +189,7 @@ export const N_ROLES = ROLES.length;
 // `file` gives a clip a new name when it is replaced, so caches (jsDelivr keeps files up to a day) can't serve the old one
 export const CLIPS: Record<string, { fit?: 'contain'; bg?: string; file?: string }> = {
   werewolf: { file: 'werewolf-v2' }, alphawolf: {}, mysticwolf: {}, minion: {}, mason: {}, seer: {},
-  apprenticeseer: {}, robber: {}, witch: {}, gremlin: {}, drunk: {}, ravenwatch: {}, hunter: {}, tanner: {}, villager: {},
+  apprenticeseer: {}, robber: {}, witch: {}, troublemaker: {}, gremlin: {}, drunk: {}, insomniac: {}, ravenwatch: {}, hunter: {}, tanner: {}, villager: {},
 };
 export const clipOf = (r: number) => (r >= 0 && r < ROLES.length && CLIPS[ROLES[r].id] ? ROLES[r].id : null);
 export const isWolfCard = (r: number) => r === R.WEREWOLF || r === R.MYSTIC || r === R.ALPHA;

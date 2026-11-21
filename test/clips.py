@@ -24,10 +24,10 @@ async def run(pw, W, H, touch):
                 await h.wait_for_timeout(1800); seen.add(name)
                 st=await h.evaluate("() => { const v=document.querySelector('.theater-clip video'); return v ? {src:v.currentSrc.split('/').pop(), t:+v.currentTime.toFixed(2), ready:v.readyState, err:!!v.error} : 'still art' }")
                 print(tag, name, st)
-                if name in ('狼人','預言家','搗蛋鬼','守夜鴉'): await h.screenshot(path=f'{SHOT}{tag}_{name}.png')
+                if name in ('搗蛋鬼','失眠者'): await h.screenshot(path=f'{SHOT}{tag}_{name}.png')
         await h.wait_for_timeout(400)
     print(tag,'errors',errs); await b.close()
 async def main():
     async with async_playwright() as pw:
-        await run(pw,1280,820,False); await run(pw,390,844,True)
+        await run(pw,1280,820,False)
 asyncio.run(main())
