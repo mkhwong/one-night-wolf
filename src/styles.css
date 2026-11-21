@@ -695,3 +695,5 @@ img.role-art[alt="頭狼"], img.role-art[alt="Alpha Wolf"], img.role-art[alt="�
 .tgl.is-on { background: var(--moss); border-color: var(--moss); }
 .tgl.is-on .tgl-knob { transform: translateX(20px); background: #fff; }
 .tgl:disabled { opacity: .45; cursor: not-allowed; }
+
+.site-foot { padding: 20px var(--gutter-r) calc(20px + env(safe-area-inset-bottom, 0px)) var(--gutter-l); text-align: center; color: var(--faint); font-size: .76rem; }

@@ -73,3 +73,7 @@ Browser tests use Python Playwright. Start `npm run serve` (and `npm run peer-se
 | `art/` | Role clipart sheets and transparent cutouts; `tools/cutout.py`, `tools/cutout_alpha.py` (Alpha Wolf, Night Raven) and `tools/encode_art.py` rebuild `src/art.ts` |
 
 React 18 and PeerJS load from pinned CDN builds; everything else, including the art, is inside `index.html`.
+
+## Copyright
+
+© 2026 Matthew Wong. All rights reserved. The code is public only so the game can be hosted; it is **not** open source. No part of this project (code, artwork, clips, text) may be copied, modified, redistributed or re-hosted without written permission. See [LICENSE](LICENSE).

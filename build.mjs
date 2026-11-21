@@ -2,7 +2,7 @@ import * as esbuild from 'esbuild';
 import fs from 'fs';
 const opts = {
   entryPoints: ['src/main.tsx'], bundle: true, minify: true, format: 'iife', target: 'es2020', write: false,
-  jsx: 'transform', jsxFactory: 'React.createElement', jsxFragment: 'React.Fragment', legalComments: 'none',
+  jsx: 'transform', jsxFactory: 'React.createElement', jsxFragment: 'React.Fragment', legalComments: 'none', banner: { js: '/*! One Night Wolf (c) 2026 Matthew Wong. All rights reserved. */' },
   logLevel: 'warning',
 };
 const r = await esbuild.build({ ...opts, define: { __TEST__: 'false' } });
@@ -11,7 +11,8 @@ const js = r.outputFiles[0].text.replace(/<\/script/gi, '<\\/script');
 const jsT = rt.outputFiles[0].text.replace(/<\/script/gi, '<\\/script');
 const css = fs.readFileSync('src/styles.css', 'utf8');
 const FONTS = 'https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=Noto+Sans+TC:wght@400;500;700;900&display=swap';
-const head = `<title>一夜狼人殺 One Night Wolf</title>
+const head = `<meta name="copyright" content="© 2026 Matthew Wong. All rights reserved.">
+<title>一夜狼人殺 One Night Wolf</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -42,7 +43,7 @@ const siteScripts = `<script src="https://cdnjs.cloudflare.com/ajax/libs/react/1
 <script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js"></script>
 `;
 // GitHub Pages serves this file from the repository root
-fs.writeFileSync('index.html', `<!doctype html><html lang="zh-Hant"><head>${siteHead}</head><body>${body}${siteScripts}<script>${js}</script></body></html>\n`);
+fs.writeFileSync('index.html', `<!doctype html>\n<!-- 一夜狼人殺 One Night Wolf. © 2026 Matthew Wong. All rights reserved. Copying, modifying or republishing any part of this page (code, artwork, clips, text) without written permission is not allowed. -->\n<html lang="zh-Hant"><head>${siteHead}</head><body>${body}${siteScripts}<script>${js}</script></body></html>\n`);
 // local peer-to-peer test page: same app, PeerJS served locally, pointed at a local PeerServer
 const peerCfg = `<script>window.ONUW_PEER={host:'127.0.0.1',port:9000,path:'/',secure:false,debug:1,config:{iceServers:[]}};</script>`;
 fs.writeFileSync('dist/test-peer.html', `<!doctype html><html lang="zh-Hant"><head>${siteHead}</head><body>${body}<script src="react.js"></script><script src="react-dom.js"></script><script src="peerjs.js"></script>${peerCfg}<script>${jsT}</script></body></html>`);

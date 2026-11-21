@@ -102,7 +102,7 @@ function Screen() {
 }
 
 export function App() {
-  const v = useView();
+  const v = useView(); const t = useT();
   const [rules, setRules] = useState(false);
   const [test, setTest] = useState(false);
   useEffect(() => {
@@ -116,6 +116,7 @@ export function App() {
       <div className="sky" aria-hidden="true" />
       <Nav onRules={() => setRules(true)} onTest={() => setTest(true)} />
       <Screen />
+      {v.status === 'home' && <footer className="site-foot" id="copyright">© 2026 Matthew Wong · 一夜狼人殺 One Night Wolf · {t.lang === 'zh' ? '版權所有，未經許可不得複製或轉載。' : 'All rights reserved. Do not copy or republish without permission.'}</footer>}
       <ClaimToasts />
       <Throws />
       <HuntOverlay />
