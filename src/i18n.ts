@@ -95,8 +95,10 @@ const en: Dict = {
   dashTip: '{d}: {v} players ({g} Google, {u} guests), {n} games', dashLogins: 'Login history', dashRecentGames: 'Recent games',
   dashWhen: 'When', dashKind: 'How', dashName: 'Nickname', dashDevice: 'Device', dashWinner: 'Winner', dashMins: 'Min', dashDetail: 'Players (start → end role)',
   gateChecking: 'Checking…', gateBody: 'This game needs a password. Ask the owner for it.', gatePh: 'Password', gateWrong: 'That password isn’t right.', gateEnter: 'Enter',
-  gateOwner: 'Owner? Sign in with Google', gateTitle: 'Entry password', gateIsOn: 'Everyone (guests and Google players) must enter this password before they can play. You don’t need it while signed in.',
+  gateOwner: 'Owner or admin? Sign in with Google', gateTitle: 'Entry password', gateIsOn: 'Everyone (guests and Google players) must enter this password before they can play. You don’t need it while signed in.',
   gateIsOffSaved: 'Off: anyone with the link can play. Your password is kept for when you switch it back on.', gateNoPw: 'Save a password first, then switch it on.', gateNewPh: 'Password', gateSave: 'Save password', gateSaved: 'Saved. Everyone must enter the new password.', gateSavedOff: 'Password saved. Switch it on when you’re ready.', gateOffDone: 'Password requirement off.', gateOnDone: 'Password requirement on.', gateStateOn: 'Password required', gateStateOff: 'No password needed',
+  adminTitle: 'Admin dashboard', adminSection: 'Admins', adminBody: 'Up to {n} Google accounts. Admins skip the entry password, can see the records and can view and change the password, but can’t open the spreadsheet or manage admins. They must sign in with Google using this email.',
+  adminNone: 'No admins yet.', adminPh: 'Admin’s Google email', adminAdd: 'Add', adminRemove: 'Remove', adminAdded: 'Admin added.', adminRemoved: 'Admin removed.', adminMax: 'Up to {n} admins.',
   ph_lobby: 'Lobby', ph_reveal: 'Cards', ph_night: 'Night', ph_day: 'Day', ph_vote: 'Vote', ph_hunt: 'Hunter', ph_end: 'Results', ph_closed: 'Closed',
 };
 
@@ -190,8 +192,10 @@ const zh: Dict = {
   dashTip: '{d}：{v} 位玩家（Google {g}、訪客 {u}），{n} 局', dashLogins: '登入紀錄', dashRecentGames: '最近對局',
   dashWhen: '時間', dashKind: '方式', dashName: '暱稱', dashDevice: '裝置', dashWinner: '勝方', dashMins: '分鐘', dashDetail: '玩家（起始 → 最終角色）',
   gateChecking: '檢查中…', gateBody: '此遊戲需要密碼，請向擁有者索取。', gatePh: '密碼', gateWrong: '密碼不正確。', gateEnter: '進入',
-  gateOwner: '擁有者？用 Google 登入', gateTitle: '進入密碼', gateIsOn: '所有人（訪客及 Google 玩家）必須輸入此密碼才可以遊玩。你登入後無需輸入。',
+  gateOwner: '擁有者／管理員？用 Google 登入', gateTitle: '進入密碼', gateIsOn: '所有人（訪客及 Google 玩家）必須輸入此密碼才可以遊玩。你登入後無需輸入。',
   gateIsOffSaved: '已關閉：任何有連結的人都可以遊玩。密碼會保留，方便你之後再開啟。', gateNoPw: '請先儲存密碼，然後開啟。', gateNewPh: '密碼', gateSave: '儲存密碼', gateSaved: '已儲存。所有人需要輸入新密碼。', gateSavedOff: '密碼已儲存。準備好便可開啟。', gateOffDone: '已關閉密碼要求。', gateOnDone: '已開啟密碼要求。', gateStateOn: '需要密碼', gateStateOff: '無需密碼',
+  adminTitle: '管理員監察', adminSection: '管理員', adminBody: '最多 {n} 個 Google 帳戶。管理員無需輸入進入密碼，可以查看紀錄及查看／更改密碼，但不能開啟試算表或管理管理員。管理員須以此電郵的 Google 帳戶登入。',
+  adminNone: '尚未設定管理員。', adminPh: '管理員的 Google 電郵', adminAdd: '加入', adminRemove: '移除', adminAdded: '已加入管理員。', adminRemoved: '已移除管理員。', adminMax: '最多 {n} 位管理員。',
   ph_lobby: '大廳', ph_reveal: '睇牌', ph_night: '夜晚', ph_day: '白天', ph_vote: '投票', ph_hunt: '獵人', ph_end: '結算', ph_closed: '已關閉',
 };
 

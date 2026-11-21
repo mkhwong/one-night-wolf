@@ -1,5 +1,5 @@
 import { React, useState, useEffect, useRef } from '../react';
-import { useAuth, renderGoogleButton, signOut, fetchDashboard, refreshMe, unlockGate, setGate } from '../track';
+import { useAuth, renderGoogleButton, signOut, fetchDashboard, refreshMe, unlockGate, setGate, setAdmins } from '../track';
 import { useT, useView } from './store';
 import { Modal } from './common';
 
@@ -49,7 +49,7 @@ export function AccountStrip() {
       <section className="acct-strip" id="acct-strip">
         <Avatar src={acc.picture} name={acc.name} />
         <div className="acct-strip-t"><b>{acc.name}</b><span className="muted small">{t('acctRecord', { w: acc.wins, l: acc.losses })}</span></div>
-        {acc.owner && <button type="button" className="btn btn-sm btn-moon" id="owner-open" onClick={onOpen}>📊 {t('ownerTitle')}</button>}
+        {(acc.owner || acc.admin) && <button type="button" className="btn btn-sm btn-moon" id="owner-open" onClick={onOpen}>📊 {t(acc.owner ? 'ownerTitle' : 'adminTitle')}</button>}
       </section>
     );
   }
@@ -86,7 +86,7 @@ export function AccountModal() {
           </div>
           <p className="muted small">{t('acctBotsNote')}</p>
           <div className="row-gap end">
-            {acc.owner && <button type="button" className="btn btn-moon" id="owner-open-2" onClick={onOwner}>📊 {t('ownerTitle')}</button>}
+            {(acc.owner || acc.admin) && <button type="button" className="btn btn-moon" id="owner-open-2" onClick={onOwner}>📊 {t(acc.owner ? 'ownerTitle' : 'adminTitle')}</button>}
             <button type="button" className="btn btn-ghost" id="acct-signout" onClick={() => signOut()}>{t('acctSignOut')}</button>
           </div>
         </>
@@ -128,11 +128,49 @@ export function GateScreen() {
         {wrong && <p className="err" id="gate-wrong">{t('gateWrong')}</p>}
         <button type="submit" className="btn btn-moon btn-lg" disabled={!pw.trim() || busy}>{busy ? '…' : t('gateEnter')}</button>
         <details className="gate-owner">
-          <summary className="muted small">{t('gateOwner')}</summary>
+          <summary className="muted small" id="gate-owner-sum">{t('gateOwner')}</summary>
           <GoogleButton />
         </details>
       </form>
     </main>
+  );
+}
+
+function AdminSetting({ admins, max, onSaved }: { admins: string[]; max: number; onSaved: () => void }) {
+  const t = useT();
+  const [list, setList] = useState<string[]>(admins);
+  const [add, setAdd] = useState('');
+  const [msg, setMsg] = useState('');
+  const [busy, setBusy] = useState(false);
+  useEffect(() => { setList(admins); }, [admins.join(',')]);
+  const valid = /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(add.trim());
+  const save = async (next: string[], done: string) => {
+    setBusy(true); setMsg('…');
+    const r = await setAdmins(next);
+    setBusy(false);
+    if (r.ok) { setList(r.admins || []); setMsg(done); setAdd(''); onSaved(); }
+    else setMsg(r.error?.startsWith('max') ? t('adminMax', { n: max }) : t('dashErr'));
+  };
+  return (
+    <div className="gate-set" id="admin-set">
+      <p className="small muted">{t('adminBody', { n: max })}</p>
+      {list.length ? (
+        <ul className="admin-list">
+          {list.map(e => (
+            <li key={e}><span>{e}</span>
+              <button type="button" className="btn btn-sm btn-ghost" disabled={busy} onClick={() => save(list.filter(x => x !== e), t('adminRemoved'))} aria-label={t('adminRemove') + ' ' + e}>{t('adminRemove')}</button>
+            </li>
+          ))}
+        </ul>
+      ) : <p className="small muted">{t('adminNone')}</p>}
+      {list.length < max && (
+        <form className="row-gap" onSubmit={ev => { ev.preventDefault(); if (valid) save([...list, add.trim().toLowerCase()], t('adminAdded')); }}>
+          <input id="admin-new" className="text-input" type="email" value={add} onChange={e => setAdd(e.target.value)} placeholder={t('adminPh')} autoComplete="off" />
+          <button type="submit" className="btn btn-sm btn-moon" id="admin-add" disabled={busy || !valid || list.includes(add.trim().toLowerCase())}>{t('adminAdd')}</button>
+        </form>
+      )}
+      {msg && <p className="small muted" id="admin-msg">{msg}</p>}
+    </div>
   );
 }
 
@@ -230,7 +268,7 @@ export function OwnerDashboard() {
   };
   useEffect(() => { load(); const id = setInterval(() => load(), 60000); return () => clearInterval(id); }, [days]);
   return (
-    <Modal title={t('ownerTitle')} onClose={onClose} wide>
+    <Modal title={t(data && data.role === 'admin' ? 'adminTitle' : 'ownerTitle')} onClose={onClose} wide>
       <div className="dash" id="owner-dash">
         <div className="dash-bar">
           <span className="muted small">{data ? t('dashUpdated', { t: data.at }) : busy ? t('dashLoading') : ''}</span>
@@ -255,6 +293,13 @@ export function OwnerDashboard() {
 
             <h3>{t('gateTitle')}</h3>
             <GateSetting password={data.gatePassword || ''} on={!!data.gateOn} onSaved={() => load()} />
+
+            {data.role === 'owner' && (
+              <>
+                <h3>{t('adminSection')}</h3>
+                <AdminSetting admins={data.admins || []} max={data.maxAdmins || 5} onSaved={() => load()} />
+              </>
+            )}
 
             <h3>{t('dashLiveRooms')}</h3>
             {data.live.length ? (

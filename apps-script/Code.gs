@@ -12,8 +12,10 @@
  *   戰績      one row per signed-in player per game (their own result)
  *   房間      rooms that are open now / recently (heartbeat from the host)
  *
- * Only the owner (the Google account that owns this script, plus OWNER_EMAILS) can read
- * the dashboard; everyone else can only add their own records.
+ * Only the owner (the Google account that owns this script, plus OWNER_EMAILS) and up to 5 admins
+ * (set by the owner in the dashboard) can read the dashboard; everyone else can only add their own
+ * records. Admins skip the entry password, see the records (emails partly hidden) and can view and
+ * change the entry password; only the owner can open the spreadsheet or manage the admin list.
  */
 
 // ⬇️ Paste your OAuth "Web application" client ID here (the same one Moonlit Werewolf uses is fine,
@@ -62,6 +64,7 @@ function handle_(p) {
       case 'config': return config_(p);
       case 'unlock': return unlock_(p);
       case 'setgate': return setGate_(p);
+      case 'admins': return setAdmins_(p);
       case 'login': return login_(p);
       case 'visit': return visit_(p);
       case 'me': return me_(p);
@@ -90,7 +93,7 @@ function gateOk_(p) {
   const pw = gatePassword_();
   if (!pw) return true;
   const s = verify_(p.token);
-  if (s && isOwner_(s.email)) return true;           // the owner never needs the password
+  if (s && role_(s.email)) return true;              // the owner and admins never need the password
   const g = verify_(p.gate);
   return !!(g && g.gv === gateVer_(pw));
 }
@@ -108,7 +111,7 @@ function unlock_(p) {
 
 function setGate_(p) {
   const s = verify_(p.token);
-  if (!s || !isOwner_(s.email)) return { ok: false, error: 'owner only' };
+  if (!s || !role_(s.email)) return { ok: false, error: 'owner only' };   // owner or admin
   const props = PropertiesService.getScriptProperties();
   if (typeof p.password === 'string') {
     const pw = p.password.trim().slice(0, 40);
@@ -147,6 +150,7 @@ function login_(p) {
   CacheService.getScriptCache().put('v:' + info.sub, '1', VISIT_GAP_S);
   acc.picture = info.picture || '';
   acc.owner = isOwner_(info.email);
+  acc.admin = isAdmin_(info.email);
   return { ok: true, token: sign_({ sub: info.sub, email: info.email, exp: Date.now() + SESSION_DAYS * 864e5 }), account: acc };
 }
 
@@ -158,6 +162,7 @@ function me_(p) {
   if (!row) return { ok: false, error: 'signed out' };
   const acc = rowToAcc_(sh.getRange(row, 1, 1, 12).getValues()[0]);
   acc.owner = isOwner_(s.email);
+  acc.admin = isAdmin_(s.email);
   return { ok: true, account: acc };
 }
 
@@ -257,10 +262,12 @@ function result_(p) {
   return { ok: true, account: acc };
 }
 
-// ------------------------------------------------------------------ owner dashboard
+// ------------------------------------------------------------------ owner / admin dashboard
 function dashboard_(p) {
   const s = verify_(p.token);
-  if (!s || !isOwner_(s.email)) return { ok: false, error: 'owner only' };
+  const role = s ? role_(s.email) : '';
+  if (!role) return { ok: false, error: 'owner only' };
+  const owner = role === 'owner';
   const now = Date.now();
   const days = Math.min(Math.max(Number(p.days) || 30, 7), 90);
   const since = now - days * 864e5;
@@ -284,7 +291,7 @@ function dashboard_(p) {
   });
   for (let i = logs.length - 1; i >= 0 && logins.length < 150; i--) {
     const r = logs[i];
-    logins.push({ at: fmt(new Date(r[0])), kind: r[1], name: r[2], email: r[3], id: String(r[4]).slice(-8), dev: r[5] });
+    logins.push({ at: fmt(new Date(r[0])), kind: r[1], name: r[2], email: owner ? r[3] : maskEmail_(r[3]), id: String(r[4]).slice(-8), dev: r[5] });
   }
 
   const games = rows_('game', 20000);
@@ -316,15 +323,21 @@ function dashboard_(p) {
     return { day: k, visitors: Object.keys(d.visitors).length, google: Object.keys(d.google).length, guests: Object.keys(d.guests).length, logins: d.logins, games: d.games };
   });
   const today = series[series.length - 1];
-  return {
+  const out = {
     ok: true,
+    role,
     at: fmt(new Date()),
     totals: { games: totalGames, gamesWithBots: totalWithBots, accounts: accts.length, visitorsToday: today.visitors, gamesToday: today.games, live: live.length },
     live, daily: series, logins, games: recentGames,
-    sheet: SpreadsheetApp.getActiveSpreadsheet().getUrl(),
-    gatePassword: storedPassword_(),
+    gatePassword: storedPassword_(),   // owner and admins can see and change it
     gateOn: gateOn_(),
   };
+  if (owner) {   // owner-only parts
+    out.sheet = SpreadsheetApp.getActiveSpreadsheet().getUrl();
+    out.admins = admins_();
+    out.maxAdmins = MAX_ADMINS;
+  }
+  return out;
 }
 
 // ------------------------------------------------------------------ helpers
@@ -380,6 +393,33 @@ function isOwner_(email) {
   const e = String(email || '').toLowerCase();
   if (!e) return false;
   return e === ownerEmail_().toLowerCase() || OWNER_EMAILS.map(x => String(x).toLowerCase()).indexOf(e) >= 0;
+}
+
+// Admins (max 5, managed by the owner in the dashboard): skip the entry password, review the records
+// and manage the entry password; only the owner can open the spreadsheet or manage the admin list.
+const MAX_ADMINS = 5;
+function admins_() {
+  try { const a = JSON.parse(PropertiesService.getScriptProperties().getProperty('ADMIN_EMAILS') || '[]'); return Array.isArray(a) ? a : []; }
+  catch (e) { return []; }
+}
+function isAdmin_(email) { const e = String(email || '').toLowerCase(); return !!e && admins_().indexOf(e) >= 0; }
+function role_(email) { return isOwner_(email) ? 'owner' : isAdmin_(email) ? 'admin' : ''; }
+function maskEmail_(e) {
+  const m = /^([^@]*)@(.*)$/.exec(String(e || ''));
+  if (!m) return '';
+  return m[1].slice(0, 2) + '***@' + m[2];
+}
+
+function setAdmins_(p) {
+  const s = verify_(p.token);
+  if (!s || !isOwner_(s.email)) return { ok: false, error: 'owner only' };
+  const list = (Array.isArray(p.emails) ? p.emails : [])
+    .map(x => String(x || '').trim().toLowerCase())
+    .filter(x => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(x));
+  const uniq = list.filter((x, i) => list.indexOf(x) === i && !isOwner_(x));
+  if (uniq.length > MAX_ADMINS) return { ok: false, error: 'max ' + MAX_ADMINS };
+  PropertiesService.getScriptProperties().setProperty('ADMIN_EMAILS', JSON.stringify(uniq));
+  return { ok: true, admins: uniq };
 }
 
 function secret_() {

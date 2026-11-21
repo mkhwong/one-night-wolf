@@ -5,7 +5,7 @@ import { SCRIPT_URL, TRACK_HOSTS } from './config';
 import { game, View } from './game';
 import { ROLES } from './roles';
 
-export interface Account { id: string; email: string; name: string; picture?: string; wins: number; losses: number; owner?: boolean }
+export interface Account { id: string; email: string; name: string; picture?: string; wins: number; losses: number; owner?: boolean; admin?: boolean }
 interface Saved { token: string; account: Account }
 
 const LS_ACC = 'onuw:acct', LS_GUEST = 'onuw:guest', SS_VISIT = 'onuw:visited', LS_GATE = 'onuw:gate', LS_GATE_ON = 'onuw:gateon';
@@ -136,6 +136,12 @@ export async function setGate(change: { password?: string; on?: boolean }): Prom
   return call({ a: 'setgate', token: st.saved.token, ...change });
 }
 
+/** Owner: replace the admin list (max 5 Google emails). */
+export async function setAdmins(emails: string[]): Promise<{ ok: boolean; admins?: string[]; error?: string }> {
+  if (!st.saved) return { ok: false };
+  return call({ a: 'admins', token: st.saved.token, emails });
+}
+
 export async function fetchDashboard(days = 30): Promise<any> {
   if (!st.saved) return { ok: false, error: 'signed out' };
   return call({ a: 'dashboard', token: st.saved.token, days });
@@ -193,7 +199,7 @@ function watch() {
   startedAt = 0;
   if (st.saved && v.mySeat >= 0) {
     call({ a: 'result', token: st.saved.token, id, won: res.win.includes(v.mySeat) ? 1 : 0, bots }).then(r => {
-      if (r.ok && r.account && st.saved) save({ token: st.saved.token, account: { ...r.account, picture: st.saved.account.picture, owner: st.saved.account.owner } });
+      if (r.ok && r.account && st.saved) save({ token: st.saved.token, account: { ...r.account, picture: st.saved.account.picture, owner: st.saved.account.owner, admin: st.saved.account.admin } });
     });
   }
 }

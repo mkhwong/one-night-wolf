@@ -697,3 +697,7 @@ img.role-art[alt="頭狼"], img.role-art[alt="Alpha Wolf"], img.role-art[alt="�
 .tgl:disabled { opacity: .45; cursor: not-allowed; }
 
 .site-foot { padding: 20px var(--gutter-r) calc(20px + env(safe-area-inset-bottom, 0px)) var(--gutter-l); text-align: center; color: var(--faint); font-size: .76rem; }
+.admin-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.admin-list li { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 6px 10px; border: 1px solid var(--rim); border-radius: 10px; background: var(--night); font-size: .88rem; overflow-wrap: anywhere; }
+.gate-pw-show { padding: 6px 12px; border-radius: 8px; background: var(--night); border: 1px solid var(--rim); letter-spacing: .06em; }
+#admin-set .text-input { flex: 1 1 200px; min-width: 0; }
