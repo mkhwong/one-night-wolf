@@ -79,8 +79,12 @@ function handle_(p) {
 }
 
 // ------------------------------------------------------------------ entry password (訪問密碼)
-// Empty = no password. Set from the owner dashboard. Changing it signs everyone out of the gate.
-function gatePassword_() { return PropertiesService.getScriptProperties().getProperty('GATE_PASSWORD') || ''; }
+// The owner saves a password and switches the requirement on or off from the dashboard.
+// Turning it off keeps the password, so it can be switched back on later.
+// Changing the password signs everyone out of the gate.
+function storedPassword_() { return PropertiesService.getScriptProperties().getProperty('GATE_PASSWORD') || ''; }
+function gateOn_() { return PropertiesService.getScriptProperties().getProperty('GATE_ON') === '1' && !!storedPassword_(); }
+function gatePassword_() { return gateOn_() ? storedPassword_() : ''; }   // the password in force ('' = none)
 function gateVer_(pw) { return b64_(Utilities.computeHmacSha256Signature('gate:' + pw, secret_())).slice(0, 16); }
 function gateOk_(p) {
   const pw = gatePassword_();
@@ -105,10 +109,16 @@ function unlock_(p) {
 function setGate_(p) {
   const s = verify_(p.token);
   if (!s || !isOwner_(s.email)) return { ok: false, error: 'owner only' };
-  const pw = String(p.password || '').trim().slice(0, 40);
   const props = PropertiesService.getScriptProperties();
-  if (pw) props.setProperty('GATE_PASSWORD', pw); else props.deleteProperty('GATE_PASSWORD');
-  return { ok: true, gate: !!pw };
+  if (typeof p.password === 'string') {
+    const pw = p.password.trim().slice(0, 40);
+    if (pw) props.setProperty('GATE_PASSWORD', pw); else { props.deleteProperty('GATE_PASSWORD'); props.deleteProperty('GATE_ON'); }
+  }
+  if (p.on === true || p.on === false) {
+    if (p.on && !storedPassword_()) return { ok: false, error: 'no password' };
+    props.setProperty('GATE_ON', p.on ? '1' : '0');
+  }
+  return { ok: true, on: gateOn_(), password: storedPassword_() };
 }
 
 // ------------------------------------------------------------------ accounts
@@ -312,7 +322,8 @@ function dashboard_(p) {
     totals: { games: totalGames, gamesWithBots: totalWithBots, accounts: accts.length, visitorsToday: today.visitors, gamesToday: today.games, live: live.length },
     live, daily: series, logins, games: recentGames,
     sheet: SpreadsheetApp.getActiveSpreadsheet().getUrl(),
-    gatePassword: gatePassword_(),
+    gatePassword: storedPassword_(),
+    gateOn: gateOn_(),
   };
 }
 

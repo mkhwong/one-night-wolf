@@ -130,11 +130,10 @@ export async function unlockGate(password: string): Promise<boolean> {
   return true;
 }
 
-/** Owner: set ('' turns the password off). */
-export async function setGatePassword(password: string): Promise<boolean> {
-  if (!st.saved) return false;
-  const r = await call({ a: 'setgate', token: st.saved.token, password });
-  return !!r.ok;
+/** Owner: save a password and/or switch the requirement on or off. */
+export async function setGate(change: { password?: string; on?: boolean }): Promise<{ ok: boolean; on?: boolean; password?: string; error?: string }> {
+  if (!st.saved) return { ok: false };
+  return call({ a: 'setgate', token: st.saved.token, ...change });
 }
 
 export async function fetchDashboard(days = 30): Promise<any> {

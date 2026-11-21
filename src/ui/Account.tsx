@@ -1,5 +1,5 @@
 import { React, useState, useEffect, useRef } from '../react';
-import { useAuth, renderGoogleButton, signOut, fetchDashboard, refreshMe, unlockGate, setGatePassword } from '../track';
+import { useAuth, renderGoogleButton, signOut, fetchDashboard, refreshMe, unlockGate, setGate } from '../track';
 import { useT, useView } from './store';
 import { Modal } from './common';
 
@@ -136,26 +136,35 @@ export function GateScreen() {
   );
 }
 
-function GateSetting({ current, onSaved }: { current: string; onSaved: () => void }) {
+function GateSetting({ password, on, onSaved }: { password: string; on: boolean; onSaved: () => void }) {
   const t = useT();
-  const [pw, setPw] = useState(current);
+  const [pw, setPw] = useState(password);
+  const [cur, setCur] = useState({ password, on });
   const [msg, setMsg] = useState('');
-  useEffect(() => { setPw(current); }, [current]);
-  const save = async (value: string) => {
-    setMsg('…');
-    const ok = await setGatePassword(value);
-    setMsg(ok ? (value ? t('gateSaved') : t('gateOffDone')) : t('dashErr'));
-    if (ok) onSaved();
+  const [busy, setBusy] = useState(false);
+  useEffect(() => { setPw(password); setCur({ password, on }); }, [password, on]);
+  const apply = async (change: { password?: string; on?: boolean }, done: string) => {
+    setBusy(true); setMsg('…');
+    const r = await setGate(change);
+    setBusy(false);
+    if (r.ok) { setCur({ password: r.password || '', on: !!r.on }); setMsg(done); onSaved(); } else setMsg(t('dashErr'));
   };
+  const dirty = pw.trim() !== cur.password;
   return (
     <div className="gate-set" id="gate-set">
-      <p className="small muted">{current ? t('gateIsOn') : t('gateIsOff')}</p>
+      <div className="gate-toggle-row">
+        <button type="button" role="switch" id="gate-toggle" aria-checked={cur.on} className={`switch ${cur.on ? 'is-on' : ''}`}
+          disabled={busy || (!cur.password && !cur.on)} onClick={() => apply({ on: !cur.on }, cur.on ? t('gateOffDone') : t('gateOnDone'))}>
+          <span className="switch-knob" aria-hidden="true" />
+        </button>
+        <b>{cur.on ? t('gateStateOn') : t('gateStateOff')}</b>
+      </div>
+      <p className="small muted">{cur.on ? t('gateIsOn') : cur.password ? t('gateIsOffSaved') : t('gateNoPw')}</p>
       <div className="row-gap">
         <input id="gate-new" className="text-input" value={pw} onChange={e => setPw(e.target.value)} placeholder={t('gateNewPh')} maxLength={40} autoComplete="off" />
-        <button type="button" className="btn btn-sm btn-moon" id="gate-save" disabled={!pw.trim() || pw.trim() === current} onClick={() => save(pw.trim())}>{t('gateSave')}</button>
-        {current && <button type="button" className="btn btn-sm btn-ghost" id="gate-off" onClick={() => { setPw(''); save(''); }}>{t('gateTurnOff')}</button>}
+        <button type="button" className="btn btn-sm btn-moon" id="gate-save" disabled={busy || !pw.trim() || !dirty} onClick={() => apply({ password: pw.trim() }, cur.on ? t('gateSaved') : t('gateSavedOff'))}>{t('gateSave')}</button>
       </div>
-      {msg && <p className="small muted">{msg}</p>}
+      {msg && <p className="small muted" id="gate-msg">{msg}</p>}
     </div>
   );
 }
@@ -245,7 +254,7 @@ export function OwnerDashboard() {
             </div>
 
             <h3>{t('gateTitle')}</h3>
-            <GateSetting current={data.gatePassword || ''} onSaved={() => load()} />
+            <GateSetting password={data.gatePassword || ''} on={!!data.gateOn} onSaved={() => load()} />
 
             <h3>{t('dashLiveRooms')}</h3>
             {data.live.length ? (
