@@ -5,8 +5,21 @@ const opts = {
   jsx: 'transform', jsxFactory: 'React.createElement', jsxFragment: 'React.Fragment', legalComments: 'none', banner: { js: '/*! One Night Wolf (c) 2026 Matthew Wong. All rights reserved. */' },
   logLevel: 'warning',
 };
-const r = await esbuild.build({ ...opts, define: { __TEST__: 'false' } });
-const rt = await esbuild.build({ ...opts, define: { __TEST__: 'true' } });
+const r = await esbuild.build({ ...opts, define: { __TEST__: 'false', __LOCK__: 'false' } });
+const rt = await esbuild.build({ ...opts, define: { __TEST__: 'true', __LOCK__: 'false' } });
+// the published page: locked to the official address and scrambled so a copy is hard to read or edit
+const rp = await esbuild.build({ ...opts, define: { __TEST__: 'false', __LOCK__: 'true' } });
+const { default: Obf } = await import('javascript-obfuscator');
+const jsP = Obf.obfuscate(rp.outputFiles[0].text, {
+  compact: true, target: 'browser', seed: 20261121,
+  identifierNamesGenerator: 'hexadecimal', renameGlobals: false,
+  stringArray: true, stringArrayEncoding: ['base64'], stringArrayThreshold: 1, stringArrayRotate: true, stringArrayShuffle: true,
+  splitStrings: false, reservedStrings: ['^data:'],        // keep the big embedded artwork as plain strings (fast to load)
+  controlFlowFlattening: false, deadCodeInjection: false,   // these slow the game down; not worth it
+  selfDefending: false, debugProtection: false, disableConsoleOutput: false,
+  transformObjectKeys: false, unicodeEscapeSequence: false,
+}).getObfuscatedCode().replace(/<\/script/gi, '<\\/script');
+const banner = '/*! One Night Wolf (c) 2026 Matthew Wong. All rights reserved. */\n';
 const js = r.outputFiles[0].text.replace(/<\/script/gi, '<\\/script');
 const jsT = rt.outputFiles[0].text.replace(/<\/script/gi, '<\\/script');
 const css = fs.readFileSync('src/styles.css', 'utf8');
@@ -43,7 +56,7 @@ const siteScripts = `<script src="https://cdnjs.cloudflare.com/ajax/libs/react/1
 <script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js"></script>
 `;
 // GitHub Pages serves this file from the repository root
-fs.writeFileSync('index.html', `<!doctype html>\n<!-- 一夜狼人殺 One Night Wolf. © 2026 Matthew Wong. All rights reserved. Copying, modifying or republishing any part of this page (code, artwork, clips, text) without written permission is not allowed. -->\n<html lang="zh-Hant"><head>${siteHead}</head><body>${body}${siteScripts}<script>${js}</script></body></html>\n`);
+fs.writeFileSync('index.html', `<!doctype html>\n<!-- 一夜狼人殺 One Night Wolf. © 2026 Matthew Wong. All rights reserved. Copying, modifying or republishing any part of this page (code, artwork, clips, text) without written permission is not allowed. -->\n<html lang="zh-Hant"><head>${siteHead}</head><body>${body}${siteScripts}<script>${banner}${jsP}</script></body></html>\n`);
 // local peer-to-peer test page: same app, PeerJS served locally, pointed at a local PeerServer
 const peerCfg = `<script>window.ONUW_PEER={host:'127.0.0.1',port:9000,path:'/',secure:false,debug:1,config:{iceServers:[]}};</script>`;
 fs.writeFileSync('dist/test-peer.html', `<!doctype html><html lang="zh-Hant"><head>${siteHead}</head><body>${body}<script src="react.js"></script><script src="react-dom.js"></script><script src="peerjs.js"></script>${peerCfg}<script>${jsT}</script></body></html>`);
