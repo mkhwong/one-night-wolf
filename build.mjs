@@ -10,7 +10,7 @@ const rt = await esbuild.build({ ...opts, define: { __TEST__: 'true' } });
 const js = r.outputFiles[0].text.replace(/<\/script/gi, '<\\/script');
 const jsT = rt.outputFiles[0].text.replace(/<\/script/gi, '<\\/script');
 const css = fs.readFileSync('src/styles.css', 'utf8');
-const FONTS = 'https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=LXGW+WenKai+TC:wght@400;700&family=Noto+Sans+TC:wght@400;500;700&display=swap';
+const FONTS = 'https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=Noto+Sans+TC:wght@400;500;700;900&display=swap';
 const head = `<title>一夜狼人殺 One Night Wolf</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
