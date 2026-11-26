@@ -11,6 +11,7 @@ import { Vote, HuntOverlay } from './Vote';
 import { End } from './End';
 import { ClaimToasts, Throws } from './Effects';
 import { AccountChip, AccountOverlays } from './Account';
+import { useAuth } from '../track';
 import { isMuted, setMuted, unlockAudio, sfx } from '../sound';
 
 function Nav({ onRules, onTest }: { onRules: () => void; onTest: () => void }) {
@@ -18,6 +19,8 @@ function Nav({ onRules, onTest }: { onRules: () => void; onTest: () => void }) {
   const t = useT(); const v = useView();
   const [muted, setM] = useState(isMuted());
   const inRoom = v.status === 'in' && v.pub;
+  // until the entry password is accepted, hide everything that shows the character art
+  const a = useAuth(); const locked = a.on && a.gate !== 'open' && v.status === 'home';
   return (
     <header className="nav">
       <div className="nav-inner">
@@ -36,8 +39,8 @@ function Nav({ onRules, onTest }: { onRules: () => void; onTest: () => void }) {
           </div>
           <button type="button" id="clips-btn" className="btn btn-sm btn-ghost" aria-pressed={clipsOn} aria-label={clipsOn ? t('clipsOn') : t('clipsOff')} title={clipsOn ? t('clipsOn') : t('clipsOff')} onClick={() => setClipsOn(!clipsOn)}>{clipsOn ? '🎬' : '🖼'}<span className="btn-label">{clipsOn ? t('clipsOn') : t('clipsOff')}</span></button>
           <button type="button" className="btn btn-sm btn-ghost" aria-pressed={!muted} aria-label={muted ? t('soundOff') : t('sound')} onClick={() => { const m = !muted; setMuted(m); setM(m); if (!m) { unlockAudio(); sfx.chime(); } }}>{muted ? '🔇' : '🔊'}<span className="btn-label">{muted ? t('soundOff') : t('sound')}</span></button>
-          <button type="button" className="btn btn-sm btn-ghost" onClick={onRules} aria-label={t('rules')}><span className="btn-ico" aria-hidden="true">?</span><span className="btn-label">{t('rules')}</span></button>
-          <button type="button" id="test-mode-btn" className={`btn btn-sm ${v.testMode ? 'btn-test-on' : 'btn-ghost'}`} onClick={onTest} aria-label={v.testMode ? t('testOn') : t('test')}>🤖<span className="btn-label">{v.testMode ? t('testOn') : t('test')}</span></button>
+          {!locked && <button type="button" className="btn btn-sm btn-ghost" id="rules-btn" onClick={onRules} aria-label={t('rules')}><span className="btn-ico" aria-hidden="true">?</span><span className="btn-label">{t('rules')}</span></button>}
+          {!locked && <button type="button" id="test-mode-btn" className={`btn btn-sm ${v.testMode ? 'btn-test-on' : 'btn-ghost'}`} onClick={onTest} aria-label={v.testMode ? t('testOn') : t('test')}>🤖<span className="btn-label">{v.testMode ? t('testOn') : t('test')}</span></button>}
           {inRoom && <button type="button" className="btn btn-sm btn-ghost" onClick={() => game.leave()} aria-label={t('leave')}><span className="btn-ico" aria-hidden="true">⏏</span><span className="btn-label">{t('leave')}</span></button>}
         </div>
       </div>
@@ -111,6 +114,7 @@ export function App() {
     return () => window.removeEventListener('pointerdown', unlock);
   }, []);
   const ph = v.pub?.ph;
+  const a = useAuth(); const locked = a.on && a.gate !== 'open' && v.status === 'home';
   return (
     <div className={`app ph-${v.status === 'in' ? ph : v.status}`}>
       <div className="sky" aria-hidden="true" />
@@ -120,8 +124,8 @@ export function App() {
       <ClaimToasts />
       <Throws />
       <HuntOverlay />
-      {rules && <RulesModal onClose={() => setRules(false)} />}
-      {test && <TestModal onClose={() => setTest(false)} />}
+      {rules && !locked && <RulesModal onClose={() => setRules(false)} />}
+      {test && !locked && <TestModal onClose={() => setTest(false)} />}
       <AccountOverlays />
       {v.status === 'in' && v.netKind && !v.connected && <div className="net-warn" role="status">…</div>}
     </div>
